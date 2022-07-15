@@ -44,6 +44,8 @@ type
     procedure MinRoomSizeTextBoxChange(Sender: TObject);
     procedure DepthTextBoxChange(Sender: TObject);
     procedure SplitVarTextBoxChange(Sender: TObject);
+    procedure SizeVarTextBoxChange(Sender: TObject);
+    procedure DoorVarTextBoxChange(Sender: TObject);
   private
     function GenerateSeed: Int64;
   public
@@ -93,6 +95,10 @@ begin
   seed := GenerateSeed;
 end;
 
+//------------------------------------------------------------------------------
+//GUI Handling
+//------------------------------------------------------------------------------
+
 procedure TForm1.NewSeedButtonClick(Sender: TObject);
 begin
   seed := GenerateSeed;
@@ -103,17 +109,19 @@ begin
   seed := StrToInt64(SeedTextBox.Text);
 end;
 
-procedure TForm1.SplitVarTextBoxChange(Sender: TObject);
-var
-  oldVal: Extended;
+procedure TForm1.SizeVarTextBoxChange(Sender: TObject);
 begin
-  oldVal := splitVariance;
+  if SizeVarTextBox.Text <> '' then sizeVariance := StrToFloat(SizeVarTextBox.Text);
+end;
 
-  splitVariance := StrToFloat(SplitVarTextBox.Text);
+procedure TForm1.SplitVarTextBoxChange(Sender: TObject);
+begin
+  if SplitVarTextBox.Text <> '' then splitVariance := StrToFloat(SplitVarTextBox.Text);
+end;
 
-  if (splitVariance > 1) or (splitVariance < 0) then splitVariance := oldVal;
-
-  SplitVarTextBox.Text := FloatToStr(splitVariance);
+procedure TForm1.DoorVarTextBoxChange(Sender: TObject);
+begin
+  if DoorVarTextBox.Text <> '' then doorVariance := StrToFloat(DoorVarTextBox.Text);
 end;
 
 procedure TForm1.WidthTextBoxChange(Sender: TObject);
@@ -136,6 +144,10 @@ begin
   depth := StrToInt(DepthTextBox.Text);
 end;
 
+//------------------------------------------------------------------------------
+//OTHER FUNCTIONS
+//------------------------------------------------------------------------------
+
 //function to get the current system time as a seed for the random number
 //generator
 function TForm1.GenerateSeed: Int64;
@@ -152,7 +164,5 @@ begin
 
   SeedTextBox.Text := IntToStr(Result);
 end;
-
-
 
 end.

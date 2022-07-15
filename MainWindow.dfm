@@ -87,7 +87,7 @@ object Form1: TForm1
     Left = 42
     Top = 359
     Width = 95
-    Height = 25
+    Height = 22
     Alignment = taRightJustify
     TabOrder = 1
     OnChange = SeedTextBoxChange
@@ -129,7 +129,7 @@ object Form1: TForm1
     OnChange = depthTextBoxChange
   end
   object NewSeedButton: TButton
-    Left = 143
+    Left = 150
     Top = 359
     Width = 75
     Height = 25
@@ -153,6 +153,7 @@ object Form1: TForm1
     Height = 21
     TabOrder = 8
     Text = '0.5'
+    OnChange = SizeVarTextBoxChange
   end
   object DoorVarTextBox: TEdit
     Left = 318
@@ -161,6 +162,7 @@ object Form1: TForm1
     Height = 21
     TabOrder = 9
     Text = '0.5'
+    OnChange = DoorVarTextBoxChange
   end
   object GenerateButton: TButton
     Left = 360
