@@ -37,8 +37,10 @@ type
     DoorVarTextBox: TEdit;
     GenerateButton: TButton;
     procedure FormCreate(Sender: TObject);
+    procedure NewSeedButtonClick(Sender: TObject);
+    procedure SeedTextBoxChange(Sender: TObject);
   private
-    { Private declarations }
+    function GenerateSeed: Int64;
   public
     { Public declarations }
   end;
@@ -86,15 +88,35 @@ begin
 
   currID := 'A';
 
-  //get the current system time as a seed for the random number generator
+
+  seed := GenerateSeed;
+end;
+
+procedure TForm1.NewSeedButtonClick(Sender: TObject);
+begin
+  seed := GenerateSeed;
+end;
+
+procedure TForm1.SeedTextBoxChange(Sender: TObject);
+begin
+  seed := StrToInt64(SeedTextBox.Text);
+end;
+
+//function to get the current system time as a seed for the random number
+//generator
+function TForm1.GenerateSeed: Int64;
+var
+  st: SystemTime;
+  dt: TDateTime;
+begin
   Winapi.Windows.GetSystemTime(st);
 
   dt := System.SysUtils.EncodeDate(st.wYear, st.WMonth, st.WDay) +
         System.SysUtils.EncodeTime(st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
 
-  seed := System.DateUtils.MillisecondsBetween(dt, UnixDateDelta);
+  Result := System.DateUtils.MillisecondsBetween(dt, UnixDateDelta);
 
-  SeedTextBox.Text := IntToStr(seed);
+  SeedTextBox.Text := IntToStr(Result);
 end;
 
 end.

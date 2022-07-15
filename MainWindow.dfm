@@ -89,6 +89,7 @@ object Form1: TForm1
     Height = 25
     Alignment = taRightJustify
     TabOrder = 1
+    OnChange = SeedTextBoxChange
   end
   object WidthTextBox: TEdit
     Left = 49
@@ -123,12 +124,13 @@ object Form1: TForm1
     Text = '4'
   end
   object NewSeedButton: TButton
-    Left = 150
+    Left = 143
     Top = 359
     Width = 75
     Height = 25
     Caption = 'New Seed'
     TabOrder = 6
+    OnClick = NewSeedButtonClick
   end
   object SplitVarTextBox: TEdit
     Left = 318
