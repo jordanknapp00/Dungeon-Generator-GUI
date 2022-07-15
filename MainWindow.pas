@@ -242,7 +242,8 @@ begin
   if (levelsToGo = 0) or (room.rightWall - room.leftWall < minSize) or
       (room.bottomWall - room.topWall < minSize) then
   begin
-    room.id := Succ(currID);
+    currID := Succ(currID);
+    room.id := currID;
     rooms.Add(room);
     Exit;
   end;
@@ -429,8 +430,8 @@ begin
   SetLength(map, dungeonHeight, dungeonWidth);
 
   //begin by filling entire space with void. it will be drawn over later.
-  for colAt := 0 to dungeonHeight - 1 do
-    for rowAt := 0 to dungeonWidth - 1 do map[colAt, rowAt] := '.';
+  for colAt := 0 to dungeonWidth - 1 do
+    for rowAt := 0 to dungeonHeight - 1 do map[rowAt, colAt] := '.';
 
   for roomAt in rooms do
   begin
@@ -439,31 +440,37 @@ begin
     top := Trunc(roomAt.topWall);
     bottom := Trunc(roomAt.bottomWall);
 
-    //place vertical lines for sides of rooms, ignoring corners
+    OutputDebugString(PWideChar('x=' + IntToStr(left) + ',' + IntToStr(right) + ',y=' + IntToStr(top) + ',' + IntToStr(bottom)));
+
+    //i am thoroughly unconvinced that any of this code here actually works
+    //whatsoever. so i may just rewrite all of it
+    {
+    //place horizontal lines for top and bottom of rooms, ignoring corners
     for colAt := left + 2 to right - 1 do
     begin
-      map[colAt, bottom] := '|';
-      map[colAt, top] := '|';
+      map[bottom, colAt] := '-';
+      map[top, colAt] := '-';
     end;
 
-    //place horizontal lines for top and bottom of rooms, ignoring corners
-    for rowAt := top + 2 to bottom - 1 do
+    //place vertical lines for sides of rooms, ignoring corners
+    for rowAt := bottom + 2 to top - 1 do
     begin
-      map[left, rowAt] := '-';
-      map[right, rowAt] := '-';
+      OutputDebugString(PWideChar(IntToStr(rowAt)));
+      map[rowAt, left] := '|';
+      map[rowAt, right] := '|';
     end;
 
     //fill rooms with empty space
     for colAt := left + 2 to right - 1 do
-      for rowAt := top + 2 to bottom - 1 do map[colAt, rowAt] := ' ';
+      for rowAt := top + 2 to bottom - 1 do map[rowAt, colAt] := ' ';
 
     //apply corners and room id
-    map[left, bottom] := '+';
-    map[right, bottom] := '+';
-    map[left, top] := '+';
-    map[right, top] := '+';
+    map[bottom, left] := '+';
+    map[bottom, right] := '+';
+    map[top, left] := '+';
+    map[top, right] := '+';
 
-    map[Trunc((left + right) / 2), Trunc((bottom + top) / 2)] := roomAt.id;
+    map[Trunc((bottom + top) / 2), Trunc((left + right) / 2)] := roomAt.id;
 
     //add doors
     for doorAt in roomAt.doors do
@@ -471,11 +478,12 @@ begin
       colAt := Trunc(doorAt.x);
       rowAt := Trunc(doorAt.y);
 
-      if doorAt.isHorizontal then map[colAt, rowAt] := 'H'
-      else map[colAt, rowAt] := 'I';
+      if doorAt.isHorizontal then map[rowAt, colAt] := 'H'
+      else map[rowAt, colAt] := 'I';
 
       ConnectDoors(map, doorAt);
     end;
+    }
   end;
 
   //now need to actually print it
@@ -486,6 +494,13 @@ begin
   end;
 
   TextBox.Lines := output;
+
+  {
+  for roomAt in rooms do
+  begin
+    OutputDebugString(PWideChar('ID: ' + roomAt.id));
+  end;
+  }
 end;
 
 //create connections between each door
@@ -518,9 +533,9 @@ begin
     Inc(fromRow);
     Inc(toRow);
 
-    for colAt := fromCol + 2 to midPoint do map[colAt, fromRow] := 'O';
+    for colAt := fromCol + 2 to midPoint do map[fromRow, colAt] := 'O';
 
-    for colAt := midPoint + 1 to toCol - 1 do map[colAt, fromRow] := 'O';
+    for colAt := midPoint + 1 to toCol - 1 do map[fromRow, colAt] := 'O';
 
     if fromRow > toRow then
     begin
@@ -529,7 +544,7 @@ begin
       toRow := temp;
     end;
 
-    for rowAt := fromRow + 2 to toRow - 1 do map[midPoint, rowAt] := 'O';
+    for rowAt := fromRow + 2 to toRow - 1 do map[rowAt, midPoint] := 'O';
   end
   else
   begin
@@ -552,9 +567,9 @@ begin
     Inc(fromCol);
     Inc(toCol);
 
-    for rowAt := fromRow + 2 to midPoint do map[fromCol, rowAt] := 'O';
+    for rowAt := fromRow + 2 to midPoint do map[rowAt, fromCol] := 'O';
 
-    for rowAt := midPoint + 1 to toRow - 1 do map[fromCol, rowAt] := 'O';
+    for rowAt := midPoint + 1 to toRow - 1 do map[rowAt, fromCol] := 'O';
 
     if fromCol > toCol then
     begin
@@ -563,7 +578,7 @@ begin
       toCol := temp;
     end;
 
-    for colAt := fromCol + 2 to toCol - 1 do map[colAt, midPoint] := 'O';
+    for colAt := fromCol + 2 to toCol - 1 do map[midPoint, colAt] := 'O';
   end;
 end;
 
