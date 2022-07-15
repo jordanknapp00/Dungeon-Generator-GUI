@@ -10,6 +10,7 @@ uses
   System.Generics.Collections, System.DateUtils;
 
 type
+  TMap = Array of Array of Char;
   TForm1 = class(TForm)
     MainMenu: TMainMenu;
     FileMenu: TMenuItem;
@@ -55,6 +56,9 @@ type
     function Split(min, max, variance: Extended): Extended;
     procedure Shrink;
     procedure Print;
+    procedure ConnectDoors(map: TMap; doorAt: TDoor);
+
+    function ArrayToString(const arr: Array of Char): String;
   public
     { Public declarations }
   end;
@@ -102,6 +106,7 @@ begin
   seed := GenerateSeed;
 
   //set up the text box
+  TextBox.Font.Name := 'Courier New';
   TextBox.Text := '';
   TextBox.ReadOnly := true;
   TextBox.ScrollBars := ssBoth;
@@ -397,6 +402,8 @@ begin
   end;
 end;
 
+//actually print the map to the textbox
+//
 // '.' = void space
 // ' ' = open space (in a room)
 // '+' = room corner
@@ -407,7 +414,7 @@ end;
 // '-' = horizontal wall
 procedure TForm1.Print;
 var
-  map: Array of Array of Char;
+  map: TMap;
 
   count, colAt, rowAt: Integer;
 
@@ -415,10 +422,11 @@ var
   doorAt: TDoor;
 
   left, right, top, bottom: Integer;
+
+  output: TStringList;
 begin
   //set size of 2d char array
-  SetLength(map, dungeonHeight - 1);
-  for count := 0 to dungeonHeight - 1 do SetLength(map[count], dungeonWidth - 1);
+  SetLength(map, dungeonHeight, dungeonWidth);
 
   //begin by filling entire space with void. it will be drawn over later.
   for colAt := 0 to dungeonHeight - 1 do
@@ -430,7 +438,140 @@ begin
     right := Trunc(roomAt.rightWall);
     top := Trunc(roomAt.topWall);
     bottom := Trunc(roomAt.bottomWall);
+
+    //place vertical lines for sides of rooms, ignoring corners
+    for colAt := left + 2 to right - 1 do
+    begin
+      map[colAt, bottom] := '|';
+      map[colAt, top] := '|';
+    end;
+
+    //place horizontal lines for top and bottom of rooms, ignoring corners
+    for rowAt := top + 2 to bottom - 1 do
+    begin
+      map[left, rowAt] := '-';
+      map[right, rowAt] := '-';
+    end;
+
+    //fill rooms with empty space
+    for colAt := left + 2 to right - 1 do
+      for rowAt := top + 2 to bottom - 1 do map[colAt, rowAt] := ' ';
+
+    //apply corners and room id
+    map[left, bottom] := '+';
+    map[right, bottom] := '+';
+    map[left, top] := '+';
+    map[right, top] := '+';
+
+    map[Trunc((left + right) / 2), Trunc((bottom + top) / 2)] := roomAt.id;
+
+    //add doors
+    for doorAt in roomAt.doors do
+    begin
+      colAt := Trunc(doorAt.x);
+      rowAt := Trunc(doorAt.y);
+
+      if doorAt.isHorizontal then map[colAt, rowAt] := 'H'
+      else map[colAt, rowAt] := 'I';
+
+      ConnectDoors(map, doorAt);
+    end;
   end;
+
+  //now need to actually print it
+  output := TStringList.Create;
+  for colAt := 0 to dungeonHeight - 1 do
+  begin
+    output.Add(ArrayToString(map[colAt]));
+  end;
+
+  TextBox.Lines := output;
+end;
+
+//create connections between each door
+procedure TForm1.ConnectDoors(map: TMap; doorAt: TDoor);
+var
+  midPoint, fromCol, toCol, fromRow, toRow, temp, colAt, rowAt: Integer;
+begin
+  if doorAt.isHorizontal then
+  begin
+    midPoint := Trunc(doorAt.divDim);
+
+    fromCol := Trunc(doorAt.x);
+    toCol := Trunc(doorAt.other.x);
+
+    //for whatever reason, horizontal doors are always one row off
+    fromRow := Trunc(doorAt.y) - 1;
+    toRow := Trunc(doorAt.other.y) - 1;
+
+    if fromCol > toCol then
+    begin
+      temp := fromCol;
+      fromCol := toCol;
+      toCol := temp;
+
+      temp := fromRow;
+      fromRow := toRow;
+      toRow := temp;
+    end;
+
+    Inc(fromRow);
+    Inc(toRow);
+
+    for colAt := fromCol + 2 to midPoint do map[colAt, fromRow] := 'O';
+
+    for colAt := midPoint + 1 to toCol - 1 do map[colAt, fromRow] := 'O';
+
+    if fromRow > toRow then
+    begin
+      temp := fromRow;
+      fromRow := toRow;
+      toRow := temp;
+    end;
+
+    for rowAt := fromRow + 2 to toRow - 1 do map[midPoint, rowAt] := 'O';
+  end
+  else
+  begin
+    midPoint := Trunc(doorAt.divDim);
+
+    //vertical doors are always one column off
+    fromCol := Trunc(doorAt.x) - 1;
+    toCol := Trunc(doorAt.other.x) - 1;
+
+    fromRow := Trunc(doorAt.y);
+    toRow := Trunc(doorAt.other.y);
+
+    if fromRow > toRow then
+    begin
+      temp := fromRow;
+      fromRow := toRow;
+      toRow := temp;
+    end;
+
+    Inc(fromCol);
+    Inc(toCol);
+
+    for rowAt := fromRow + 2 to midPoint do map[fromCol, rowAt] := 'O';
+
+    for rowAt := midPoint + 1 to toRow - 1 do map[fromCol, rowAt] := 'O';
+
+    if fromCol > toCol then
+    begin
+      temp := fromCol;
+      fromCol := toCol;
+      toCol := temp;
+    end;
+
+    for colAt := fromCol + 2 to toCol - 1 do map[colAt, midPoint] := 'O';
+  end;
+end;
+
+//helper function to get a string from an array of chars
+function TForm1.ArrayToString(const arr: array of Char): string;
+begin
+  if Length(arr) > 0 then SetString(Result, PChar(@arr[0]), Length(arr))
+  else Result := '';
 end;
 
 end.
