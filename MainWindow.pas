@@ -47,8 +47,12 @@ type
     procedure SizeVarTextBoxChange(Sender: TObject);
     procedure DoorVarTextBoxChange(Sender: TObject);
     procedure ExitProgramClick(Sender: TObject);
+    procedure GenerateButtonClick(Sender: TObject);
   private
     function GenerateSeed: Int64;
+
+    procedure BSP(room: TRoom; levelsToGo: Integer);
+    function Split(min, max, variance: Extended): Extended;
   public
     { Public declarations }
   end;
@@ -150,6 +154,37 @@ begin
   depth := StrToInt(DepthTextBox.Text);
 end;
 
+procedure TForm1.GenerateButtonClick(Sender: TObject);
+var
+  startRoom: TRoom;
+begin
+  //check all the values to make sure they conform to the proper ranges
+  if (splitVariance < 0) or (splitVariance > 1) then
+  begin
+    splitVariance := 0.5;
+    SplitVarTextBox.Text := FloatToStr(splitVariance);
+  end;
+
+  if (sizeVariance < 0) or (sizeVariance > 1) then
+  begin
+    sizeVariance := 0.5;
+    SizeVarTextBox.Text := FloatToStr(sizeVariance);
+  end;
+
+  if (doorVariance < 0) or (doorVariance > 1) then
+  begin
+    doorVariance := 0.5;
+    DoorVarTextBox.Text := FloatToStr(doorVariance);
+  end;
+
+  if seed < 0 then seed := GenerateSeed;
+
+  System.RandSeed := seed;
+
+  startRoom := TRoom.Create(0, dungeonWidth - 1, 0, dungeonHeight - 1);
+  BSP(startRoom, depth);
+end;
+
 //Menubar stuff
 
 procedure TForm1.ExitProgramClick(Sender: TObject);
@@ -176,6 +211,56 @@ begin
   Result := System.DateUtils.MillisecondsBetween(dt, UnixDateDelta);
 
   SeedTextBox.Text := IntToStr(Result);
+end;
+
+//procedure to generate list of rooms
+procedure TForm1.BSP(room: TRoom; levelsToGo: Integer);
+var
+  splitPoint: Extended;
+  leftRoom, rightRoom: TRoom;
+begin
+  //check base cases first
+  //stop if we reach the desired depth, or if the current room has reached the
+  //minimum size
+  if (levelsToGo = 0) or (room.rightWall - room.leftWall < minSize) or
+      (room.topWall - room.bottomWall < minSize) then
+  begin
+    room.id := Succ(currID);
+    rooms.Add(room);
+    Exit;
+  end;
+
+  Dec(levelsToGo);
+
+  //determine direction upon which we will split. whichever wall is longer is
+  //the one that is split
+  if (room.rightWall - room.leftWall > room.topWall - room.bottomWall) then
+  begin
+    splitPoint := Split(room.leftWall, room.rightWall, splitVariance);
+
+    //using splitPoint, make two new rooms split down the line along that point
+    leftRoom := TRoom.Create(room.leftWall, splitPoint, room.topWall, room.bottomWall);
+    rightRoom := TRoom.Create(splitPoint, room.rightWall, room.topWall, room.bottomWall);
+
+
+  end;
+
+end;
+
+function TForm1.Split(min, max, variance: Extended): Extended;
+var
+  randomVariance, midPoint: Extended;
+begin
+  //get our random variance value, the amount from which we're deviating from
+  //the center. with no variance, we will always split right down the middle of
+  //a room. this variance value will always be between -1 and 1, inclusive.
+  randomVariance := Random * 2 - 1;
+
+  midPoint := (min + max) / 2;
+
+  midPoint := midPoint + (randomVariance * variance * (max - min) / 2);
+
+  Result := midPoint;
 end;
 
 end.
