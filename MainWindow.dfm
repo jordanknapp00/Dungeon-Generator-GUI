@@ -1,6 +1,6 @@
 object Form1: TForm1
-  Left = 0
-  Top = 0
+  Left = 516
+  Top = 203
   Caption = 'DungenGUI'
   ClientHeight = 445
   ClientWidth = 576
@@ -12,6 +12,7 @@ object Form1: TForm1
   Font.Style = []
   Menu = MainMenu
   OldCreateOrder = False
+  Position = poDesigned
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
@@ -44,7 +45,7 @@ object Form1: TForm1
     Alignment = taRightJustify
     Caption = 'Minimum Room Size:'
   end
-  object depthLabel: TLabel
+  object DepthLabel: TLabel
     Left = 109
     Top = 414
     Width = 83
@@ -98,14 +99,16 @@ object Form1: TForm1
     Height = 21
     TabOrder = 2
     Text = '80'
+    OnChange = WidthTextBoxChange
   end
   object HeightTextBox: TEdit
     Left = 49
-    Top = 414
+    Top = 416
     Width = 31
     Height = 21
     TabOrder = 3
     Text = '80'
+    OnChange = HeightTextBoxChange
   end
   object MinRoomSizeTextBox: TEdit
     Left = 206
@@ -114,6 +117,7 @@ object Form1: TForm1
     Height = 21
     TabOrder = 4
     Text = '4'
+    OnChange = MinRoomSizeTextBoxChange
   end
   object depthTextBox: TEdit
     Left = 206
@@ -122,6 +126,7 @@ object Form1: TForm1
     Height = 21
     TabOrder = 5
     Text = '4'
+    OnChange = depthTextBoxChange
   end
   object NewSeedButton: TButton
     Left = 143
@@ -139,6 +144,7 @@ object Form1: TForm1
     Height = 21
     TabOrder = 7
     Text = '0.5'
+    OnChange = SplitVarTextBoxChange
   end
   object SizeVarTextBox: TEdit
     Left = 318

@@ -25,8 +25,8 @@ type
     HeightTextBox: TEdit;
     MinSizeLabel: TLabel;
     MinRoomSizeTextBox: TEdit;
-    depthLabel: TLabel;
-    depthTextBox: TEdit;
+    DepthLabel: TLabel;
+    DepthTextBox: TEdit;
     ExitProgram: TMenuItem;
     NewSeedButton: TButton;
     SplitVarLabel: TLabel;
@@ -39,6 +39,11 @@ type
     procedure FormCreate(Sender: TObject);
     procedure NewSeedButtonClick(Sender: TObject);
     procedure SeedTextBoxChange(Sender: TObject);
+    procedure WidthTextBoxChange(Sender: TObject);
+    procedure HeightTextBoxChange(Sender: TObject);
+    procedure MinRoomSizeTextBoxChange(Sender: TObject);
+    procedure DepthTextBoxChange(Sender: TObject);
+    procedure SplitVarTextBoxChange(Sender: TObject);
   private
     function GenerateSeed: Int64;
   public
@@ -56,9 +61,9 @@ var
   dungeonWidth: Integer;
   dungeonHeight: Integer;
 
-  splitVariance: Double;
-  sizeVariance: Double;
-  doorVariance: Double;
+  splitVariance: Extended;
+  sizeVariance: Extended;
+  doorVariance: Extended;
 
   rooms: TList<TRoom>;
 
@@ -69,9 +74,6 @@ implementation
 {$R *.dfm}
 
 procedure TForm1.FormCreate(Sender: TObject);
-var
-  st: SystemTime;
-  dt: TDateTime;
 begin
   //set all variables to the correct value
   minSize := 4;
@@ -88,7 +90,6 @@ begin
 
   currID := 'A';
 
-
   seed := GenerateSeed;
 end;
 
@@ -100,6 +101,39 @@ end;
 procedure TForm1.SeedTextBoxChange(Sender: TObject);
 begin
   seed := StrToInt64(SeedTextBox.Text);
+end;
+
+procedure TForm1.SplitVarTextBoxChange(Sender: TObject);
+var
+  oldVal: Extended;
+begin
+  oldVal := splitVariance;
+
+  splitVariance := StrToFloat(SplitVarTextBox.Text);
+
+  if (splitVariance > 1) or (splitVariance < 0) then splitVariance := oldVal;
+
+  SplitVarTextBox.Text := FloatToStr(splitVariance);
+end;
+
+procedure TForm1.WidthTextBoxChange(Sender: TObject);
+begin
+  dungeonWidth := StrToInt(WidthTextBox.Text);
+end;
+
+procedure TForm1.HeightTextBoxChange(Sender: TObject);
+begin
+  dungeonHeight := StrToInt(HeightTextBox.Text);
+end;
+
+procedure TForm1.MinRoomSizeTextBoxChange(Sender: TObject);
+begin
+  minSize := StrToInt(MinRoomSizeTextBox.Text);
+end;
+
+procedure TForm1.DepthTextBoxChange(Sender: TObject);
+begin
+  depth := StrToInt(DepthTextBox.Text);
 end;
 
 //function to get the current system time as a seed for the random number
@@ -118,5 +152,7 @@ begin
 
   SeedTextBox.Text := IntToStr(Result);
 end;
+
+
 
 end.
