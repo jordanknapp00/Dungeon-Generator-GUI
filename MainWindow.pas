@@ -181,8 +181,11 @@ begin
 
   System.RandSeed := seed;
 
+  rooms.Clear;
   startRoom := TRoom.Create(0, dungeonWidth - 1, 0, dungeonHeight - 1);
   BSP(startRoom, depth);
+
+  TextBox.Text := IntToStr(rooms.Count);
 end;
 
 //Menubar stuff
@@ -213,11 +216,16 @@ begin
   SeedTextBox.Text := IntToStr(Result);
 end;
 
-//procedure to generate list of rooms
+//procedure to recursively create rooms
 procedure TForm1.BSP(room: TRoom; levelsToGo: Integer);
 var
   splitPoint: Extended;
-  leftRoom, rightRoom: TRoom;
+  leftRoom, rightRoom, bottomRoom, topRoom: TRoom;
+
+  doorAt: TDoor;
+  toGetDoor: TRoom;
+
+  leftDoor, rightDoor, topDoor, bottomDoor: TDoor;
 begin
   //check base cases first
   //stop if we reach the desired depth, or if the current room has reached the
@@ -242,9 +250,73 @@ begin
     leftRoom := TRoom.Create(room.leftWall, splitPoint, room.topWall, room.bottomWall);
     rightRoom := TRoom.Create(splitPoint, room.rightWall, room.topWall, room.bottomWall);
 
+    //since this started as one big room, we need to make sure the doors end up
+    //in the appropriate room. any doors that were on the left side of the split
+    //should end up in the left room, and vice versa
+    for doorAt in room.doors do
+    begin
+      if doorAt.x < splitPoint then toGetDoor := leftRoom
+      else toGetDoor := rightRoom;
 
+      toGetDoor.AddDoor(doorAt);
+
+      //since we're splitting vertically, and there is a specific allowed
+      //variance for door locations, we want to relocate the door so it is
+      //within that variance. for example, with 0 variance, doors are always in
+      //the center of a room. vertical doors, however, would no longer be in the
+      //center becase we've split along the vertical axis. so we need to use the
+      //split function to move the door within the appropriate bounds
+      if not doorAt.isHorizontal then
+        doorAt.x := Split(toGetDoor.leftWall, toGetDoor.rightWall, doorVariance);
+    end;
+
+    //after any doors have been added and relocated, we need to add a new set of
+    //doors between the rooms we just created. we've split vertically, so the
+    //doors will be horizontal.
+    leftDoor := TDoor.Create(splitPoint, Split(room.bottomWall, room.topWall, doorVariance), true);
+    rightDoor := TDoor.Create(splitPoint, Split(room.bottomWall, room.topWall, doorVariance), true);
+
+    leftDoor.other := rightDoor;
+    rightDoor.other := leftDoor;
+
+    leftRoom.doors.Add(leftDoor);
+    rightRoom.doors.Add(rightDoor);
+
+    //now recursively split these subrooms
+    BSP(leftRoom, levelsToGo);
+    BSP(rightRoom, levelsToGo);
+  end
+  else
+  begin
+    //split across the opposite dimension. the code here is largely the same as
+    //above, just doing things in the x direction rather than y.
+    splitPoint := Split(room.bottomWall, room.topWall, splitVariance);
+
+    bottomRoom := TRoom.Create(room.leftWall, room.rightWall, splitPoint, room.bottomWall);
+    topRoom := TRoom.Create(room.leftWall, room.rightWall, room.topWall, splitPoint);
+
+    for doorAt in room.doors do
+    begin
+      if doorAt.y < splitPoint then toGetDoor := bottomRoom
+      else toGetDoor := topRoom;
+
+      toGetDoor.AddDoor(doorAt);
+
+      if doorAt.isHorizontal then doorAt.y := Split(toGetDoor.bottomWall, toGetDoor.topWall, doorVariance);
+    end;
+
+    bottomDoor := TDoor.Create(Split(room.leftWall, room.rightWall, doorVariance), splitPoint, false);
+    topDoor := TDoor.Create(Split(room.leftWall, room.rightWall, doorvariance), splitPoint, false);
+
+    bottomDoor.other := topDoor;
+    topDoor.other := bottomDoor;
+
+    bottomRoom.AddDoor(bottomDoor);
+    topRoom.AddDoor(topDoor);
+
+    BSP(bottomRoom, levelsToGo);
+    BSP(topRoom, levelsToGo);
   end;
-
 end;
 
 function TForm1.Split(min, max, variance: Extended): Extended;
