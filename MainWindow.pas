@@ -53,6 +53,8 @@ type
 
     procedure BSP(room: TRoom; levelsToGo: Integer);
     function Split(min, max, variance: Extended): Extended;
+    procedure Shrink;
+    procedure Print;
   public
     { Public declarations }
   end;
@@ -185,7 +187,9 @@ begin
   startRoom := TRoom.Create(0, dungeonWidth - 1, 0, dungeonHeight - 1);
   BSP(startRoom, depth);
 
-  TextBox.Text := IntToStr(rooms.Count);
+  Shrink;
+
+  Print;
 end;
 
 //Menubar stuff
@@ -231,7 +235,7 @@ begin
   //stop if we reach the desired depth, or if the current room has reached the
   //minimum size
   if (levelsToGo = 0) or (room.rightWall - room.leftWall < minSize) or
-      (room.topWall - room.bottomWall < minSize) then
+      (room.bottomWall - room.topWall < minSize) then
   begin
     room.id := Succ(currID);
     rooms.Add(room);
@@ -242,7 +246,7 @@ begin
 
   //determine direction upon which we will split. whichever wall is longer is
   //the one that is split
-  if (room.rightWall - room.leftWall > room.topWall - room.bottomWall) then
+  if (room.rightWall - room.leftWall > room.bottomWall - room.topWall) then
   begin
     splitPoint := Split(room.leftWall, room.rightWall, splitVariance);
 
@@ -333,6 +337,100 @@ begin
   midPoint := midPoint + (randomVariance * variance * (max - min) / 2);
 
   Result := midPoint;
+end;
+
+//shrink down each room some amount based on sizeVariance
+procedure TForm1.Shrink;
+var
+  roomAt: TRoom;
+  doorAt: TDoor;
+
+  horizScale, vertScale, currWidth, newWidth, currHeight, newHeight,
+  centerWidth, centerHeight, doorOffsetX, doorOffsetY: Extended;
+begin
+  for roomAt in rooms do
+  begin
+    //shrink horizontally first
+    horizScale := (1 - sizeVariance * Random);
+    currWidth := roomAt.rightWall - roomAt.leftWall;
+    newWidth := currWidth * horizScale;
+
+    //at minimum, each room must be 2 units smaller to create some space in
+    //between each room
+    if currWidth - newWidth < 2 then newWidth := currWidth - 2;
+
+    //but rooms also must conform to the minimum size
+    if newWidth < minSize then newWidth := minSize;
+
+    centerWidth := (roomAt.rightWall + roomAt.leftWall) / 2;
+
+    //adjust vertical walls according to new width
+    roomAt.rightWall := centerWidth + newWidth / 2;
+    roomAt.leftWall := centerWidth - newWidth / 2;
+
+    //now do the same process, but vertically
+    vertScale := (1 - sizeVariance * Random);
+    currHeight := roomAt.bottomWall - roomAt.topWall;
+    newHeight := currHeight * vertScale;
+
+    if currHeight - newHeight < 2 then newHeight := currHeight - 2;
+
+    if newHeight < minSize then newHeight := minSize;
+
+    centerHeight := (roomAt.bottomWall - roomAt.topWall) / 2;
+
+    roomAt.bottomWall := centerHeight + newHeight / 2;
+    roomAt.topWall := centerHeight - newHeight / 2;
+
+    horizScale := newWidth / currWidth;
+    vertScale := newHeight / currHeight;
+
+    //also need to adjust the doors so they're always inside a wall
+    for doorAt in roomAt.doors do
+    begin
+      doorOffsetX := doorAt.x - centerWidth;
+      doorAt.x := horizScale * doorOffsetX + centerWidth;
+
+      doorOffsetY := doorAt.y - centerHeight;
+      doorAt.y := vertScale * doorOffsetY + centerHeight;
+    end;
+  end;
+end;
+
+// '.' = void space
+// ' ' = open space (in a room)
+// '+' = room corner
+// 'O' = tunnel
+// 'H' = vertical door
+// 'I' = horizontal door
+// '|' = vertical wall
+// '-' = horizontal wall
+procedure TForm1.Print;
+var
+  map: Array of Array of Char;
+
+  count, colAt, rowAt: Integer;
+
+  roomAt: TRoom;
+  doorAt: TDoor;
+
+  left, right, top, bottom: Integer;
+begin
+  //set size of 2d char array
+  SetLength(map, dungeonHeight - 1);
+  for count := 0 to dungeonHeight - 1 do SetLength(map[count], dungeonWidth - 1);
+
+  //begin by filling entire space with void. it will be drawn over later.
+  for colAt := 0 to dungeonHeight - 1 do
+    for rowAt := 0 to dungeonWidth - 1 do map[colAt, rowAt] := '.';
+
+  for roomAt in rooms do
+  begin
+    left := Trunc(roomAt.leftWall);
+    right := Trunc(roomAt.rightWall);
+    top := Trunc(roomAt.topWall);
+    bottom := Trunc(roomAt.bottomWall);
+  end;
 end;
 
 end.
