@@ -46,6 +46,7 @@ type
     procedure SplitVarTextBoxChange(Sender: TObject);
     procedure SizeVarTextBoxChange(Sender: TObject);
     procedure DoorVarTextBoxChange(Sender: TObject);
+    procedure ExitProgramClick(Sender: TObject);
   private
     function GenerateSeed: Int64;
   public
@@ -93,6 +94,11 @@ begin
   currID := 'A';
 
   seed := GenerateSeed;
+
+  //set up the text box
+  TextBox.Text := '';
+  TextBox.ReadOnly := true;
+  TextBox.ScrollBars := ssBoth;
 end;
 
 //------------------------------------------------------------------------------
@@ -142,6 +148,13 @@ end;
 procedure TForm1.DepthTextBoxChange(Sender: TObject);
 begin
   depth := StrToInt(DepthTextBox.Text);
+end;
+
+//Menubar stuff
+
+procedure TForm1.ExitProgramClick(Sender: TObject);
+begin
+  Application.MainForm.Close;
 end;
 
 //------------------------------------------------------------------------------

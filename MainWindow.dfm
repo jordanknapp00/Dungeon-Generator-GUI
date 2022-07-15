@@ -188,6 +188,7 @@ object Form1: TForm1
       end
       object ExitProgram: TMenuItem
         Caption = 'Exit'
+        OnClick = ExitProgramClick
       end
     end
   end
