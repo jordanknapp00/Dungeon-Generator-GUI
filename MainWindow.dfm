@@ -87,7 +87,7 @@ object Form1: TForm1
     Left = 42
     Top = 359
     Width = 95
-    Height = 22
+    Height = 21
     Alignment = taRightJustify
     TabOrder = 1
     OnChange = SeedTextBoxChange
@@ -171,6 +171,7 @@ object Form1: TForm1
     Height = 76
     Caption = 'Generate'
     TabOrder = 10
+    OnClick = GenerateButtonClick
   end
   object MainMenu: TMainMenu
     Left = 504
