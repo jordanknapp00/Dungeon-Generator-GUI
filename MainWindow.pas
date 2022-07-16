@@ -242,8 +242,8 @@ begin
   if (levelsToGo = 0) or (room.rightWall - room.leftWall < minSize) or
       (room.topWall - room.bottomWall < minSize) then
   begin
-    currID := Succ(currID);
     room.id := currID;
+    currID := Succ(currID);
     rooms.Add(room);
     Exit;
   end;
@@ -440,50 +440,43 @@ begin
     top := Trunc(roomAt.topWall);
     bottom := Trunc(roomAt.bottomWall);
 
-    OutputDebugString(PWideChar('x=' + IntToStr(left) + ',' + IntToStr(right) + ',y=' + IntToStr(top) + ',' + IntToStr(bottom)));
-
-    //i am thoroughly unconvinced that any of this code here actually works
-    //whatsoever. so i may just rewrite all of it
-    {
-    //place horizontal lines for top and bottom of rooms, ignoring corners
-    for colAt := left + 2 to right - 1 do
+    //place vertical lines for sides of rooms, ignoring corners
+    for colAt := left + 1 to right - 1 do
     begin
-      map[bottom, colAt] := '-';
-      map[top, colAt] := '-';
+      map[colAt][bottom] := '|';
+      map[colAt][top] := '|';
     end;
 
-    //place vertical lines for sides of rooms, ignoring corners
-    for rowAt := bottom + 2 to top - 1 do
+    //place horizontal lines for top and bottom of rooms, ignoring corners
+    for rowAt := bottom + 1 to top - 1 do
     begin
-      OutputDebugString(PWideChar(IntToStr(rowAt)));
-      map[rowAt, left] := '|';
-      map[rowAt, right] := '|';
+      map[left][rowAt] := '-';
+      map[right][rowAt] := '-';
     end;
 
     //fill rooms with empty space
-    for colAt := left + 2 to right - 1 do
-      for rowAt := top + 2 to bottom - 1 do map[rowAt, colAt] := ' ';
+    for colAt := left + 1 to right - 1 do
+      for rowAt := bottom + 1 to top - 1 do map[colAt, rowAt] := ' ';
 
-    //apply corners and room id
-    map[bottom, left] := '+';
-    map[bottom, right] := '+';
-    map[top, left] := '+';
-    map[top, right] := '+';
+    //apply corner tiles for each room
+    map[left, bottom] := '+';
+    map[right, bottom] := '+';
+    map[left, top] := '+';
+    map[right, top] := '+';
 
-    map[Trunc((bottom + top) / 2), Trunc((left + right) / 2)] := roomAt.id;
+    //apply room id
+    map[Trunc((left + right) / 2)][Trunc((bottom + top) / 2)] := roomAt.id;
 
-    //add doors
     for doorAt in roomAt.doors do
     begin
       colAt := Trunc(doorAt.x);
       rowAt := Trunc(doorAt.y);
 
-      if doorAt.isHorizontal then map[rowAt, colAt] := 'H'
-      else map[rowAt, colAt] := 'I';
+      if doorAt.isHorizontal then map[colAt, rowAt] := 'H'
+      else map[colAt][rowAt] := 'I';
 
       ConnectDoors(map, doorAt);
     end;
-    }
   end;
 
   //now need to actually print it
