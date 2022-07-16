@@ -426,7 +426,7 @@ procedure TForm1.Print;
 var
   map: TMap;
 
-  count, colAt, rowAt: Integer;
+  colAt, rowAt: Integer;
 
   roomAt: TRoom;
   doorAt: TDoor;
