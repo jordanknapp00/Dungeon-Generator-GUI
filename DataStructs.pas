@@ -31,7 +31,7 @@ type
       doors: TList<TDoor>;
 
     published
-      constructor Create(left, right, top, bottom: Double);
+      constructor Create(left, right, bottom, top: Double);
 
       procedure AddDoor(toAdd: TDoor);
   end;
@@ -56,7 +56,7 @@ end;
 //TROOM METHODS
 //------------------------------------------------------------------------------
 
-constructor TRoom.Create(left, right, top, bottom: Double);
+constructor TRoom.Create(left, right, bottom, top: Double);
 begin
   leftWall := left;
   rightWall := right;

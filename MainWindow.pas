@@ -240,7 +240,7 @@ begin
   //stop if we reach the desired depth, or if the current room has reached the
   //minimum size
   if (levelsToGo = 0) or (room.rightWall - room.leftWall < minSize) or
-      (room.bottomWall - room.topWall < minSize) then
+      (room.topWall - room.bottomWall < minSize) then
   begin
     currID := Succ(currID);
     room.id := currID;
@@ -252,13 +252,13 @@ begin
 
   //determine direction upon which we will split. whichever wall is longer is
   //the one that is split
-  if (room.rightWall - room.leftWall > room.bottomWall - room.topWall) then
+  if (room.rightWall - room.leftWall > room.topWall - room.bottomWall) then
   begin
     splitPoint := Split(room.leftWall, room.rightWall, splitVariance);
 
     //using splitPoint, make two new rooms split down the line along that point
-    leftRoom := TRoom.Create(room.leftWall, splitPoint, room.topWall, room.bottomWall);
-    rightRoom := TRoom.Create(splitPoint, room.rightWall, room.topWall, room.bottomWall);
+    leftRoom := TRoom.Create(room.leftWall, splitPoint, room.bottomWall, room.topWall);
+    rightRoom := TRoom.Create(splitPoint, room.rightWall, room.bottomWall, room.topWall);
 
     //since this started as one big room, we need to make sure the doors end up
     //in the appropriate room. any doors that were on the left side of the split
@@ -302,8 +302,8 @@ begin
     //above, just doing things in the x direction rather than y.
     splitPoint := Split(room.bottomWall, room.topWall, splitVariance);
 
-    bottomRoom := TRoom.Create(room.leftWall, room.rightWall, splitPoint, room.bottomWall);
-    topRoom := TRoom.Create(room.leftWall, room.rightWall, room.topWall, splitPoint);
+    bottomRoom := TRoom.Create(room.leftWall, room.rightWall, room.bottomWall, splitPoint);
+    topRoom := TRoom.Create(room.leftWall, room.rightWall, splitPoint, room.topWall);
 
     for doorAt in room.doors do
     begin
@@ -376,17 +376,17 @@ begin
 
     //now do the same process, but vertically
     vertScale := (1 - sizeVariance * Random);
-    currHeight := roomAt.bottomWall - roomAt.topWall;
+    currHeight := roomAt.topWall - roomAt.bottomWall;
     newHeight := currHeight * vertScale;
 
     if currHeight - newHeight < 2 then newHeight := currHeight - 2;
 
     if newHeight < minSize then newHeight := minSize;
 
-    centerHeight := (roomAt.bottomWall - roomAt.topWall) / 2;
+    centerHeight := (roomAt.bottomWall + roomAt.topWall) / 2;
 
-    roomAt.bottomWall := centerHeight + newHeight / 2;
-    roomAt.topWall := centerHeight - newHeight / 2;
+    roomAt.bottomWall := centerHeight - newHeight / 2;
+    roomAt.topWall := centerHeight + newHeight / 2;
 
     horizScale := newWidth / currWidth;
     vertScale := newHeight / currHeight;
@@ -494,13 +494,6 @@ begin
   end;
 
   TextBox.Lines := output;
-
-  {
-  for roomAt in rooms do
-  begin
-    OutputDebugString(PWideChar('ID: ' + roomAt.id));
-  end;
-  }
 end;
 
 //create connections between each door
@@ -508,6 +501,7 @@ procedure TForm1.ConnectDoors(map: TMap; doorAt: TDoor);
 var
   midPoint, fromCol, toCol, fromRow, toRow, temp, colAt, rowAt: Integer;
 begin
+  {
   if doorAt.isHorizontal then
   begin
     midPoint := Trunc(doorAt.divDim);
@@ -580,6 +574,7 @@ begin
 
     for colAt := fromCol + 2 to toCol - 1 do map[midPoint, colAt] := 'O';
   end;
+  }
 end;
 
 //helper function to get a string from an array of chars
