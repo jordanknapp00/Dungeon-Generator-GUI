@@ -184,6 +184,13 @@ begin
     DoorVarTextBox.Text := FloatToStr(doorVariance);
   end;
 
+  //if splitVariance is higher than about .8, it can cause problems
+  if splitVariance > 0.8 then
+  begin
+    splitVariance := 0.8;
+    SplitVarTextBox.Text := FloatToStr(splitVariance);
+  end;
+
   if seed < 0 then seed := GenerateSeed;
 
   System.RandSeed := seed;
