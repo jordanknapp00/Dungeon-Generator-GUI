@@ -188,6 +188,8 @@ begin
 
   System.RandSeed := seed;
 
+  currID := 'A';
+
   rooms.Clear;
   startRoom := TRoom.Create(0, dungeonWidth - 1, 0, dungeonHeight - 1);
   BSP(startRoom, depth);
@@ -467,6 +469,7 @@ begin
     //apply room id
     map[Trunc((left + right) / 2)][Trunc((bottom + top) / 2)] := roomAt.id;
 
+    //handle doors
     for doorAt in roomAt.doors do
     begin
       colAt := Trunc(doorAt.x);
@@ -494,7 +497,6 @@ procedure TForm1.ConnectDoors(map: TMap; doorAt: TDoor);
 var
   midPoint, fromCol, toCol, fromRow, toRow, temp, colAt, rowAt: Integer;
 begin
-  {
   if doorAt.isHorizontal then
   begin
     midPoint := Trunc(doorAt.divDim);
@@ -502,9 +504,8 @@ begin
     fromCol := Trunc(doorAt.x);
     toCol := Trunc(doorAt.other.x);
 
-    //for whatever reason, horizontal doors are always one row off
-    fromRow := Trunc(doorAt.y) - 1;
-    toRow := Trunc(doorAt.other.y) - 1;
+    fromRow := Trunc(doorAt.y);
+    toRow := Trunc(doorAt.other.y);
 
     if fromCol > toCol then
     begin
@@ -517,12 +518,9 @@ begin
       toRow := temp;
     end;
 
-    Inc(fromRow);
-    Inc(toRow);
+    for colAt := fromCol + 1 to midPoint do map[colAt, fromRow] := 'O';
 
-    for colAt := fromCol + 2 to midPoint do map[fromRow, colAt] := 'O';
-
-    for colAt := midPoint + 1 to toCol - 1 do map[fromRow, colAt] := 'O';
+    for colAt := midPoint to toCol - 1 do map[colAt, toRow] := 'O';
 
     if fromRow > toRow then
     begin
@@ -531,15 +529,14 @@ begin
       toRow := temp;
     end;
 
-    for rowAt := fromRow + 2 to toRow - 1 do map[rowAt, midPoint] := 'O';
+    for rowAt := fromRow + 1 to toRow - 1 do map[midPoint, rowAt] := 'O';
   end
   else
   begin
     midPoint := Trunc(doorAt.divDim);
 
-    //vertical doors are always one column off
-    fromCol := Trunc(doorAt.x) - 1;
-    toCol := Trunc(doorAt.other.x) - 1;
+    fromCol := Trunc(doorAt.x);
+    toCol := Trunc(doorAt.other.x);
 
     fromRow := Trunc(doorAt.y);
     toRow := Trunc(doorAt.other.y);
@@ -549,14 +546,15 @@ begin
       temp := fromRow;
       fromRow := toRow;
       toRow := temp;
+
+      temp := fromCol;
+      fromCol := toCol;
+      toCol := temp;
     end;
 
-    Inc(fromCol);
-    Inc(toCol);
+    for rowAt := fromRow + 1 to midPoint do map[fromCol][rowAt] := 'O';
 
-    for rowAt := fromRow + 2 to midPoint do map[rowAt, fromCol] := 'O';
-
-    for rowAt := midPoint + 1 to toRow - 1 do map[rowAt, fromCol] := 'O';
+    for rowAt := midPoint to toRow - 1 do map[toCol][rowAt] := 'O';
 
     if fromCol > toCol then
     begin
@@ -565,9 +563,8 @@ begin
       toCol := temp;
     end;
 
-    for colAt := fromCol + 2 to toCol - 1 do map[midPoint, colAt] := 'O';
+    for colAt := fromCol + 1 to toCol - 1 do map[colAt][midPoint] := 'O';
   end;
-  }
 end;
 
 //helper function to get a string from an array of chars
