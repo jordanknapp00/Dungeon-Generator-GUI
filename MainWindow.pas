@@ -7,7 +7,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ToolWin, Vcl.ActnMan, Vcl.ActnCtrls,
   Vcl.Menus, Vcl.StdCtrls,
   DataStructs,
-  System.Generics.Collections, System.DateUtils;
+  System.Generics.Collections, System.DateUtils, System.UITypes;
 
 type
   TMap = Array of Array of Char;
@@ -49,13 +49,16 @@ type
     procedure DoorVarTextBoxChange(Sender: TObject);
     procedure ExitProgramClick(Sender: TObject);
     procedure GenerateButtonClick(Sender: TObject);
+    procedure NewFileClick(Sender: TObject);
+    procedure LoadFileClick(Sender: TObject);
+    procedure SaveFileClick(Sender: TObject);
   private
     function GenerateSeed: Int64;
 
     procedure BSP(room: TRoom; levelsToGo: Integer);
     function Split(min, max, variance: Extended): Extended;
     procedure Shrink;
-    procedure Print;
+    function Print: TStringList;
     procedure ConnectDoors(map: TMap; doorAt: TDoor);
 
     function ArrayToString(const arr: Array of Char): String;
@@ -82,6 +85,10 @@ var
 
   currID: Char;
 
+  generated: Boolean;
+
+  saveText: TStringList;
+
 implementation
 
 {$R *.dfm}
@@ -104,6 +111,10 @@ begin
   currID := 'A';
 
   seed := GenerateSeed;
+
+  generated := false;
+
+  saveText := TStringList.Create;
 
   //set up the text box
   TextBox.Font.Name := 'Courier New';
@@ -164,6 +175,9 @@ end;
 procedure TForm1.GenerateButtonClick(Sender: TObject);
 var
   startRoom: TRoom;
+
+  output: TStringList;
+  index: Integer;
 begin
   //check all the values to make sure they conform to the proper ranges
   if (splitVariance < 0) or (splitVariance > 1) then
@@ -203,10 +217,61 @@ begin
 
   Shrink;
 
-  Print;
+  output := Print;
+
+  //set up the save file
+  saveText.Clear;
+  saveText.Add('Parameters (copy these parameters to save your dungeon)');
+  saveText.Add('Size: ' + IntToStr(dungeonWidth) + 'x' + IntToStr(dungeonHeight));
+  saveText.Add('Depth: ' + IntToStr(depth));
+  saveText.Add('Seed: ' + IntToStr(seed));
+  saveText.Add('Minsize: ' + IntToStr(minSize));
+  saveText.Add('Split variance: ' + FloatToStr(splitVariance));
+  saveText.Add('Size variance: ' + FloatToStr(sizeVariance));
+  saveText.Add('Door variance: ' + FloatToStr(doorVariance));
+  saveText.Add('');
+  saveText.Add('For the command line version of the program, copy the parameters directly:');
+  saveText.Add('-size ' + IntToStr(dungeonWidth) + ' ' + IntToStr(dungeonHeight) +
+                ' -depth ' + IntToStr(depth) + ' -minsize ' + IntToStr(minSize) +
+                ' -splitvar ' + FloatToStr(splitVariance) + ' -sizevar ' +
+                FloatToStr(sizeVariance) + ' -doorvar ' + FloatToStr(doorVariance) +
+                ' -seed ' + IntToStr(seed));
+  saveText.Add('');
+  saveText.Add('Here''s your dungeon:');
+  saveText.Add('');
+
+  //now add the output to saveText
+  for index := 0 to output.Count - 1 do saveText.Add(output[index]);
+
+  generated := true;
 end;
 
 //Menubar stuff
+
+procedure TForm1.NewFileClick(Sender: TObject);
+begin
+  if generated then //ask to save current work
+
+
+end;
+
+procedure TForm1.LoadFileClick(Sender: TObject);
+begin
+  if generated then //ask to save current work
+
+
+end;
+
+procedure TForm1.SaveFileClick(Sender: TObject);
+begin
+  if not generated then
+  begin
+    messageDlg('You must generate a dungeon in order to save it.', mtWarning,
+                mbOKCancel, 0);
+  end;
+
+
+end;
 
 procedure TForm1.ExitProgramClick(Sender: TObject);
 begin
@@ -422,7 +487,7 @@ end;
 // 'I' = horizontal door
 // '|' = vertical wall
 // '-' = horizontal wall
-procedure TForm1.Print;
+function TForm1.Print: TStringList;
 var
   map: TMap;
 
@@ -497,6 +562,8 @@ begin
   end;
 
   TextBox.Lines := output;
+
+  Result := output
 end;
 
 //create connections between each door
