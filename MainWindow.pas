@@ -90,7 +90,7 @@ var
   generated: Boolean;
 
   saveText: TStringList;
-  saveFile: TextFile;
+  fileName: String;
 
 implementation
 
@@ -118,7 +118,7 @@ begin
   generated := false;
 
   saveText := TStringList.Create;
-  saveFile := nil;
+  fileName := '';
 
   //set up the text box
   TextBox.Font.Name := 'Courier New';
@@ -278,23 +278,41 @@ begin
 
   //if we haven't already loaded a file, then follow the procedure for creating
   //and saving to a new file
-  if saveFile = nil then
+  if fileName = '' then
   begin
     SaveFileAsClick(nil);
     Exit;
   end;
 
   //otherwise, simply overwrite the existing file
-  saveText.SaveToFile(saveFile.GetNamePath);
+  saveText.SaveToFile(fileName);
 end;
 
 procedure TForm1.SaveFileAsClick(Sender: TObject);
 var
   dialog: TSaveDialog;
 begin
+  if not generated then
+  begin
+    messageDlg('You must generate a dungeon in order to save it.', mtWarning,
+                mbOKCancel, 0);
+    Exit;
+  end;
+
   //initialize the save dialog, which should create a new file, i think
   dialog := TSaveDialog.Create(self);
   dialog.InitialDir := GetCurrentDir;
+  dialog.Filter := 'Text Documents (*.txt)|*.txt';
+  dialog.DefaultExt := 'txt';
+  dialog.FilterIndex := 1;
+
+  if dialog.Execute then
+  begin
+    fileName := dialog.Files[0];
+    saveText.SaveToFile(fileName);
+  end;
+
+  dialog.Free;
 end;
 
 procedure TForm1.ExitProgramClick(Sender: TObject);
