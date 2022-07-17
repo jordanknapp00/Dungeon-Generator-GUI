@@ -64,6 +64,8 @@ type
     procedure ConnectDoors(map: TMap; doorAt: TDoor);
 
     function ArrayToString(const arr: Array of Char): String;
+
+    function ProcessLine(line: String; num: Integer): Boolean;
   public
     { Public declarations }
   end;
@@ -304,10 +306,12 @@ end;
 
 procedure TForm1.LoadFileClick(Sender: TObject);
 var
-  optionSelected: Integer;
+  optionSelected, index: Integer;
+  dialog: TOpenDialog;
+  dungeonText: TStringList;
 begin
   //ask to save current work
-  if generated then
+  if generated or (fileName <> '') then
   begin
     optionSelected := messageDlg('Would you like to save the current dungeon?',
                                   mtConfirmation, mbYesNoCancel, 0);
@@ -316,7 +320,43 @@ begin
     else if optionSelected = mrCancel then Exit;
   end;
 
+  //set up the open dialog
+  dialog := TOpenDialog.Create(self);
+  dialog.InitialDir := GetCurrentDir;
+  dialog.Options := [ofFileMustExist];
+  dialog.Filter := 'Text Documents (*.txt)|*.txt';
 
+  if dialog.Execute then
+  begin
+    //load the contents of the file into SaveText
+    fileName := dialog.Files[0];
+    saveText.LoadFromFile(fileName);
+
+    //while looping through the contents of the file, throw an exception if it
+    //becomes invalid at any point in time
+    try
+      for index := 0 to 7 do
+        if not ProcessLine(saveText[index], index) then raise Exception.Create('Invalid Dungeon');
+
+      //if we made it this far, then the rest of the file contains the dungeon,
+      //and we need to load it.
+      dungeonText := TStringList.Create;
+      for index := 14 to saveText.Count - 1 do dungeonText.Add(saveText[index]);
+      textBox.Lines := dungeonText;
+    except
+      on E: Exception do
+      begin
+        messageDlg('This is not a valid dungeon file.', mtError, mbOKCancel, 0);
+        saveText.Clear;
+        fileName := '';
+        Exit;
+      end;
+    end;
+
+
+  end;
+
+  dialog.Free;
 end;
 
 procedure TForm1.SaveFileClick(Sender: TObject);
@@ -753,6 +793,12 @@ function TForm1.ArrayToString(const arr: array of Char): string;
 begin
   if Length(arr) > 0 then SetString(Result, PChar(@arr[0]), Length(arr))
   else Result := '';
+end;
+
+//helper function for processing lines of files being loaded
+function TForm1.ProcessLine(line: string; num: Integer): Boolean;
+begin
+  Result := true;
 end;
 
 end.
