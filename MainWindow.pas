@@ -253,15 +253,68 @@ end;
 //Menubar stuff
 
 procedure TForm1.NewFileClick(Sender: TObject);
+var
+  optionSelected: Integer;
 begin
-  if generated then //ask to save current work
+  //ask to save current work
+  if generated then
+  begin
+    optionSelected := messageDlg('Would you like to save the current dungeon?',
+                                  mtConfirmation, mbYesNoCancel, 0);
 
+    if optionSelected = mrYes then SaveFileClick(nil)
+    else if optionSelected = mrCancel then Exit;
+  end;
 
+  //just reset everything to the default
+  minSize := 4;
+  MinRoomSizeTextBox.Text := IntToStr(4);
+  depth := 4;
+  DepthTextBox.Text := IntToStr(4);
+
+  dungeonWidth := 80;
+  WidthTextBox.Text := IntToStr(80);
+  dungeonHeight := 80;
+  HeightTextBOx.Text := IntToStr(80);
+
+  splitVariance := 0.5;
+  SplitVarTextBox.Text := FloatToStr(0.5);
+  sizeVariance := 0.5;
+  SizeVarTextBox.Text := FloatToStr(0.5);
+  doorVariance := 0.5;
+  DoorVarTextBox.Text := FloatToStr(0.5);
+
+  rooms := TList<TRoom>.Create;
+
+  currID := 'A';
+
+  seed := GenerateSeed;
+
+  generated := false;
+
+  saveText := TStringList.Create;
+  fileName := '';
+
+  //set up the text box
+  TextBox.Font.Name := 'Courier New';
+  TextBox.Text := '';
+  TextBox.ReadOnly := true;
+  TextBox.ScrollBars := ssBoth;
 end;
 
 procedure TForm1.LoadFileClick(Sender: TObject);
+var
+  optionSelected: Integer;
 begin
-  if generated then //ask to save current work
+  //ask to save current work
+  if generated then
+  begin
+    optionSelected := messageDlg('Would you like to save the current dungeon?',
+                                  mtConfirmation, mbYesNoCancel, 0);
+
+    if optionSelected = mrYes then SaveFileClick(nil)
+    else if optionSelected = mrCancel then Exit;
+  end;
 
 
 end;
@@ -316,7 +369,19 @@ begin
 end;
 
 procedure TForm1.ExitProgramClick(Sender: TObject);
+var
+  optionSelected: Integer;
 begin
+  //ask to save current work
+  if generated then
+  begin
+    optionSelected := messageDlg('Would you like to save the current dungeon?',
+                                  mtConfirmation, mbYesNoCancel, 0);
+
+    if optionSelected = mrYes then SaveFileClick(nil)
+    else if optionSelected = mrCancel then Exit;
+  end;
+
   Application.MainForm.Close;
 end;
 
