@@ -175,17 +175,20 @@ object Form1: TForm1
   end
   object MainMenu: TMainMenu
     Left = 504
-    Top = 65528
+    Top = 24
     object FileMenu: TMenuItem
       Caption = 'File'
       object NewFile: TMenuItem
         Caption = 'New'
-      end
-      object LoadFile: TMenuItem
-        Caption = 'Load'
+        OnClick = NewFileClick
       end
       object SaveFile: TMenuItem
         Caption = 'Save'
+        OnClick = SaveFileClick
+      end
+      object SaveFileAs: TMenuItem
+        Caption = 'Save As'
+        OnClick = SaveFileAsClick
       end
       object ExitProgram: TMenuItem
         Caption = 'Exit'

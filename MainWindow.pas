@@ -7,7 +7,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ToolWin, Vcl.ActnMan, Vcl.ActnCtrls,
   Vcl.Menus, Vcl.StdCtrls,
   DataStructs,
-  System.Generics.Collections, System.DateUtils;
+  System.Generics.Collections, System.DateUtils, System.UITypes;
 
 type
   TMap = Array of Array of Char;
@@ -15,7 +15,6 @@ type
     MainMenu: TMainMenu;
     FileMenu: TMenuItem;
     NewFile: TMenuItem;
-    LoadFile: TMenuItem;
     SaveFile: TMenuItem;
     TextBox: TMemo;
     SeedLabel: TLabel;
@@ -37,6 +36,7 @@ type
     SizeVarTextBox: TEdit;
     DoorVarTextBox: TEdit;
     GenerateButton: TButton;
+    SaveFileAs: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure NewSeedButtonClick(Sender: TObject);
     procedure SeedTextBoxChange(Sender: TObject);
@@ -49,13 +49,16 @@ type
     procedure DoorVarTextBoxChange(Sender: TObject);
     procedure ExitProgramClick(Sender: TObject);
     procedure GenerateButtonClick(Sender: TObject);
+    procedure NewFileClick(Sender: TObject);
+    procedure SaveFileClick(Sender: TObject);
+    procedure SaveFileAsClick(Sender: TObject);
   private
     function GenerateSeed: Int64;
 
     procedure BSP(room: TRoom; levelsToGo: Integer);
     function Split(min, max, variance: Extended): Extended;
     procedure Shrink;
-    procedure Print;
+    function Print: TStringList;
     procedure ConnectDoors(map: TMap; doorAt: TDoor);
 
     function ArrayToString(const arr: Array of Char): String;
@@ -82,6 +85,11 @@ var
 
   currID: Char;
 
+  generated: Boolean;
+
+  saveText: TStringList;
+  fileName: String;
+
 implementation
 
 {$R *.dfm}
@@ -104,6 +112,11 @@ begin
   currID := 'A';
 
   seed := GenerateSeed;
+
+  generated := false;
+
+  saveText := TStringList.Create;
+  fileName := '';
 
   //set up the text box
   TextBox.Font.Name := 'Courier New';
@@ -164,6 +177,9 @@ end;
 procedure TForm1.GenerateButtonClick(Sender: TObject);
 var
   startRoom: TRoom;
+
+  output: TStringList;
+  index: Integer;
 begin
   //check all the values to make sure they conform to the proper ranges
   if (splitVariance < 0) or (splitVariance > 1) then
@@ -203,13 +219,150 @@ begin
 
   Shrink;
 
-  Print;
+  output := Print;
+
+  //set up the save file
+  saveText.Clear;
+  saveText.Add('Parameters (copy these parameters to save your dungeon)');
+  saveText.Add('Size: ' + IntToStr(dungeonWidth) + 'x' + IntToStr(dungeonHeight));
+  saveText.Add('Depth: ' + IntToStr(depth));
+  saveText.Add('Seed: ' + IntToStr(seed));
+  saveText.Add('Minsize: ' + IntToStr(minSize));
+  saveText.Add('Split variance: ' + FloatToStr(splitVariance));
+  saveText.Add('Size variance: ' + FloatToStr(sizeVariance));
+  saveText.Add('Door variance: ' + FloatToStr(doorVariance));
+  saveText.Add('');
+  saveText.Add('For the command line version of the program, copy the parameters directly:');
+  saveText.Add('-size ' + IntToStr(dungeonWidth) + ' ' + IntToStr(dungeonHeight) +
+                ' -depth ' + IntToStr(depth) + ' -minsize ' + IntToStr(minSize) +
+                ' -splitvar ' + FloatToStr(splitVariance) + ' -sizevar ' +
+                FloatToStr(sizeVariance) + ' -doorvar ' + FloatToStr(doorVariance) +
+                ' -seed ' + IntToStr(seed));
+  saveText.Add('');
+  saveText.Add('Here''s your dungeon:');
+  saveText.Add('');
+
+  //now add the output to saveText
+  for index := 0 to output.Count - 1 do saveText.Add(output[index]);
+
+  generated := true;
 end;
 
 //Menubar stuff
 
-procedure TForm1.ExitProgramClick(Sender: TObject);
+procedure TForm1.NewFileClick(Sender: TObject);
+var
+  optionSelected: Integer;
 begin
+  //ask to save current work
+  if generated then
+  begin
+    optionSelected := messageDlg('Would you like to save the current dungeon?',
+                                  mtConfirmation, mbYesNoCancel, 0);
+
+    if optionSelected = mrYes then SaveFileClick(nil)
+    else if optionSelected = mrCancel then Exit;
+  end;
+
+  //just reset everything to the default
+  minSize := 4;
+  MinRoomSizeTextBox.Text := IntToStr(4);
+  depth := 4;
+  DepthTextBox.Text := IntToStr(4);
+
+  dungeonWidth := 80;
+  WidthTextBox.Text := IntToStr(80);
+  dungeonHeight := 80;
+  HeightTextBOx.Text := IntToStr(80);
+
+  splitVariance := 0.5;
+  SplitVarTextBox.Text := FloatToStr(0.5);
+  sizeVariance := 0.5;
+  SizeVarTextBox.Text := FloatToStr(0.5);
+  doorVariance := 0.5;
+  DoorVarTextBox.Text := FloatToStr(0.5);
+
+  rooms := TList<TRoom>.Create;
+
+  currID := 'A';
+
+  seed := GenerateSeed;
+
+  generated := false;
+
+  saveText := TStringList.Create;
+  fileName := '';
+
+  //set up the text box
+  TextBox.Font.Name := 'Courier New';
+  TextBox.Text := '';
+  TextBox.ReadOnly := true;
+  TextBox.ScrollBars := ssBoth;
+end;
+
+procedure TForm1.SaveFileClick(Sender: TObject);
+begin
+  //if no dungeon has been generated, show warning dialog and exit
+  if not generated then
+  begin
+    messageDlg('You must generate a dungeon in order to save it.', mtWarning,
+                mbOKCancel, 0);
+    Exit;
+  end;
+
+  //if we haven't already loaded a file, then follow the procedure for creating
+  //and saving to a new file
+  if fileName = '' then
+  begin
+    SaveFileAsClick(nil);
+    Exit;
+  end;
+
+  //otherwise, simply overwrite the existing file
+  saveText.SaveToFile(fileName);
+end;
+
+procedure TForm1.SaveFileAsClick(Sender: TObject);
+var
+  dialog: TSaveDialog;
+begin
+  if not generated then
+  begin
+    messageDlg('You must generate a dungeon in order to save it.', mtWarning,
+                mbOKCancel, 0);
+    Exit;
+  end;
+
+  //initialize the save dialog, which should create a new file, i think
+  dialog := TSaveDialog.Create(self);
+  dialog.InitialDir := GetCurrentDir;
+  dialog.Filter := 'Text Documents (*.txt)|*.txt';
+  dialog.DefaultExt := 'txt';
+  dialog.FilterIndex := 1;
+
+  if dialog.Execute then
+  begin
+    fileName := dialog.Files[0];
+    saveText.SaveToFile(fileName);
+  end;
+
+  dialog.Free;
+end;
+
+procedure TForm1.ExitProgramClick(Sender: TObject);
+var
+  optionSelected: Integer;
+begin
+  //ask to save current work
+  if generated then
+  begin
+    optionSelected := messageDlg('Would you like to save the current dungeon?',
+                                  mtConfirmation, mbYesNoCancel, 0);
+
+    if optionSelected = mrYes then SaveFileClick(nil)
+    else if optionSelected = mrCancel then Exit;
+  end;
+
   Application.MainForm.Close;
 end;
 
@@ -422,11 +575,11 @@ end;
 // 'I' = horizontal door
 // '|' = vertical wall
 // '-' = horizontal wall
-procedure TForm1.Print;
+function TForm1.Print: TStringList;
 var
   map: TMap;
 
-  count, colAt, rowAt: Integer;
+  colAt, rowAt: Integer;
 
   roomAt: TRoom;
   doorAt: TDoor;
@@ -497,6 +650,8 @@ begin
   end;
 
   TextBox.Lines := output;
+
+  Result := output
 end;
 
 //create connections between each door
