@@ -182,10 +182,6 @@ object Form1: TForm1
         Caption = 'New'
         OnClick = NewFileClick
       end
-      object LoadFile: TMenuItem
-        Caption = 'Load'
-        OnClick = LoadFileClick
-      end
       object SaveFile: TMenuItem
         Caption = 'Save'
         OnClick = SaveFileClick
