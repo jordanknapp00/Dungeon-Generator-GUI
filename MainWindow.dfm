@@ -190,6 +190,10 @@ object Form1: TForm1
         Caption = 'Save'
         OnClick = SaveFileClick
       end
+      object SaveFileAs: TMenuItem
+        Caption = 'Save As'
+        OnClick = SaveFileAsClick
+      end
       object ExitProgram: TMenuItem
         Caption = 'Exit'
         OnClick = ExitProgramClick

@@ -37,6 +37,7 @@ type
     SizeVarTextBox: TEdit;
     DoorVarTextBox: TEdit;
     GenerateButton: TButton;
+    SaveFileAs: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure NewSeedButtonClick(Sender: TObject);
     procedure SeedTextBoxChange(Sender: TObject);
@@ -52,6 +53,7 @@ type
     procedure NewFileClick(Sender: TObject);
     procedure LoadFileClick(Sender: TObject);
     procedure SaveFileClick(Sender: TObject);
+    procedure SaveFileAsClick(Sender: TObject);
   private
     function GenerateSeed: Int64;
 
@@ -88,6 +90,7 @@ var
   generated: Boolean;
 
   saveText: TStringList;
+  saveFile: TextFile;
 
 implementation
 
@@ -115,6 +118,7 @@ begin
   generated := false;
 
   saveText := TStringList.Create;
+  saveFile := nil;
 
   //set up the text box
   TextBox.Font.Name := 'Courier New';
@@ -264,13 +268,33 @@ end;
 
 procedure TForm1.SaveFileClick(Sender: TObject);
 begin
+  //if no dungeon has been generated, show warning dialog and exit
   if not generated then
   begin
     messageDlg('You must generate a dungeon in order to save it.', mtWarning,
                 mbOKCancel, 0);
+    Exit;
   end;
 
+  //if we haven't already loaded a file, then follow the procedure for creating
+  //and saving to a new file
+  if saveFile = nil then
+  begin
+    SaveFileAsClick(nil);
+    Exit;
+  end;
 
+  //otherwise, simply overwrite the existing file
+  saveText.SaveToFile(saveFile.GetNamePath);
+end;
+
+procedure TForm1.SaveFileAsClick(Sender: TObject);
+var
+  dialog: TSaveDialog;
+begin
+  //initialize the save dialog, which should create a new file, i think
+  dialog := TSaveDialog.Create(self);
+  dialog.InitialDir := GetCurrentDir;
 end;
 
 procedure TForm1.ExitProgramClick(Sender: TObject);
