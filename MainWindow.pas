@@ -111,6 +111,7 @@ begin
   doorVariance := 0.5;
 
   rooms := TObjectList<TRoom>.Create(true);
+  rooms.OwnsObjects := true;
 
   currID := 'A';
 
@@ -127,7 +128,9 @@ begin
   TextBox.ReadOnly := true;
   TextBox.ScrollBars := ssBoth;
 
-  ReportMemoryLeaksOnShutdown := true;
+  {$IFDEF DEBUG}
+    ReportMemoryLeaksOnShutdown := true;
+  {$ENDIF}
 end;
 
 procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -568,6 +571,7 @@ begin
     BSP(bottomRoom, levelsToGo);
     BSP(topRoom, levelsToGo);
   end;
+
 end;
 
 function TForm1.Split(min, max, variance: Extended): Extended;
