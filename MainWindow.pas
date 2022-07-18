@@ -7,7 +7,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ToolWin, Vcl.ActnMan, Vcl.ActnCtrls,
   Vcl.Menus, Vcl.StdCtrls,
   DataStructs,
-  System.Generics.Collections, System.DateUtils, System.UITypes;
+  System.Generics.Collections, System.DateUtils, System.UITypes, Vcl.ComCtrls;
 
 type
   TMap = Array of Array of Char;
@@ -38,6 +38,7 @@ type
     GenerateButton: TButton;
     SaveFileAs: TMenuItem;
     procedure FormCreate(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure NewSeedButtonClick(Sender: TObject);
     procedure SeedTextBoxChange(Sender: TObject);
     procedure WidthTextBoxChange(Sender: TObject);
@@ -123,6 +124,27 @@ begin
   TextBox.Text := '';
   TextBox.ReadOnly := true;
   TextBox.ScrollBars := ssBoth;
+end;
+
+procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+var
+  optionSelected: Integer;
+begin
+  //ask to save current work
+  if generated then
+  begin
+    optionSelected := messageDlg('Would you like to save the current dungeon?',
+                                  mtConfirmation, mbYesNoCancel, 0);
+
+    if optionSelected = mrYes then SaveFileClick(nil)
+    else if optionSelected = mrCancel then
+    begin
+      CanClose := false;
+      Exit;
+    end;
+  end;
+
+  CanClose := true;
 end;
 
 //------------------------------------------------------------------------------
