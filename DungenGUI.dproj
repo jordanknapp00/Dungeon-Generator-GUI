@@ -100,7 +100,6 @@
         </DelphiCompile>
         <DCCReference Include="MainWindow.pas">
             <Form>Form1</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="DataStructs.pas"/>
         <BuildConfiguration Include="Release">

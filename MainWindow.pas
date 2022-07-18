@@ -84,7 +84,7 @@ var
   sizeVariance: Extended;
   doorVariance: Extended;
 
-  rooms: TList<TRoom>;
+  rooms: TObjectList<TRoom>;
 
   currID: Char;
 
@@ -110,7 +110,8 @@ begin
   sizeVariance := 0.5;
   doorVariance := 0.5;
 
-  rooms := TList<TRoom>.Create;
+  rooms := TObjectList<TRoom>.Create(true);
+  rooms.OwnsObjects := true;
 
   currID := 'A';
 
@@ -126,11 +127,31 @@ begin
   TextBox.Text := '';
   TextBox.ReadOnly := true;
   TextBox.ScrollBars := ssBoth;
+
+  {$IFDEF DEBUG}
+    ReportMemoryLeaksOnShutdown := true;
+  {$ENDIF}
 end;
 
 procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+var
+  roomAt: TRoom;
 begin
   CanClose := HandleSave;
+
+  //free up allocated memory
+  if CanClose then
+  begin
+    for roomAt in rooms do
+    begin
+      roomAt.doors.Clear;
+      roomAt.doors.Free;
+    end;
+    rooms.Clear;
+    rooms.Free;
+
+    saveText.Free;
+  end;
 end;
 
 //------------------------------------------------------------------------------
@@ -185,6 +206,7 @@ end;
 procedure TForm1.GenerateButtonClick(Sender: TObject);
 var
   startRoom: TRoom;
+  roomAt: TRoom;
 
   output: TStringList;
   index: Integer;
@@ -221,7 +243,14 @@ begin
 
   currID := 'A';
 
+  //free up the current list of rooms
+  for roomAt in rooms do
+  begin
+    roomAt.doors.Clear;
+    roomAt.doors.Free;
+  end;
   rooms.Clear;
+
   startRoom := TRoom.Create(0, dungeonWidth - 1, 0, dungeonHeight - 1);
   BSP(startRoom, depth);
 
@@ -254,11 +283,16 @@ begin
   for index := 0 to output.Count - 1 do saveText.Add(output[index]);
 
   generated := true;
+
+  startRoom.Free;
+  output.Free;
 end;
 
 //Menubar stuff
 
 procedure TForm1.NewFileClick(Sender: TObject);
+var
+  roomAt: TRoom;
 begin
   if not HandleSave then Exit;
 
@@ -280,7 +314,12 @@ begin
   doorVariance := 0.5;
   DoorVarTextBox.Text := FloatToStr(0.5);
 
-  rooms := TList<TRoom>.Create;
+  for roomAt in rooms do
+  begin
+    roomAt.doors.Clear;
+    roomAt.doors.Free;
+  end;
+  rooms.Clear;
 
   currID := 'A';
 
@@ -288,7 +327,7 @@ begin
 
   generated := false;
 
-  saveText := TStringList.Create;
+  saveText.Clear;
   fileName := '';
 
   //set up the text box
@@ -343,6 +382,8 @@ begin
     fileName := dialog.Files[0];
     saveText.SaveToFile(fileName);
   end;
+
+  dialog.Free;
 end;
 
 procedure TForm1.ExitProgramClick(Sender: TObject);
@@ -392,6 +433,8 @@ begin
           end
           else Result := false;
         end;
+
+        dialog.Free;
       end
       //otherwise, simple save the current file
       else
@@ -528,6 +571,7 @@ begin
     BSP(bottomRoom, levelsToGo);
     BSP(topRoom, levelsToGo);
   end;
+
 end;
 
 function TForm1.Split(min, max, variance: Extended): Extended;
@@ -690,7 +734,7 @@ begin
 
   TextBox.Lines := output;
 
-  Result := output
+  Result := output;
 end;
 
 //create connections between each door
