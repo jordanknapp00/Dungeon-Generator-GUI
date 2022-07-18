@@ -28,7 +28,7 @@ type
 
       id: Char;
 
-      doors: TList<TDoor>;
+      doors: TObjectList<TDoor>;
 
     published
       constructor Create(left, right, bottom, top: Double);
@@ -63,7 +63,7 @@ begin
   topWall := top;
   bottomWall := bottom;
 
-  doors := TList<TDoor>.Create;
+  doors := TObjectList<TDoor>.Create(true);
 end;
 
 procedure TRoom.AddDoor(toAdd: TDoor);

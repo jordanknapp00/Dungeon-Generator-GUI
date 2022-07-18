@@ -84,7 +84,7 @@ var
   sizeVariance: Extended;
   doorVariance: Extended;
 
-  rooms: TList<TRoom>;
+  rooms: TObjectList<TRoom>;
 
   currID: Char;
 
@@ -110,7 +110,7 @@ begin
   sizeVariance := 0.5;
   doorVariance := 0.5;
 
-  rooms := TList<TRoom>.Create;
+  rooms := TObjectList<TRoom>.Create(true);
 
   currID := 'A';
 
@@ -133,7 +133,6 @@ end;
 procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 var
   roomAt: TRoom;
-  doorAt: TDoor;
 begin
   CanClose := HandleSave;
 
@@ -142,11 +141,10 @@ begin
   begin
     for roomAt in rooms do
     begin
-      for doorAt in roomAt.doors do doorAt.Free;
-
+      roomAt.doors.Clear;
       roomAt.doors.Free;
-      roomAt.Free;
     end;
+    rooms.Clear;
     rooms.Free;
 
     saveText.Free;
@@ -205,6 +203,7 @@ end;
 procedure TForm1.GenerateButtonClick(Sender: TObject);
 var
   startRoom: TRoom;
+  roomAt: TRoom;
 
   output: TStringList;
   index: Integer;
@@ -241,7 +240,14 @@ begin
 
   currID := 'A';
 
+  //free up the current list of rooms
+  for roomAt in rooms do
+  begin
+    roomAt.doors.Clear;
+    roomAt.doors.Free;
+  end;
   rooms.Clear;
+
   startRoom := TRoom.Create(0, dungeonWidth - 1, 0, dungeonHeight - 1);
   BSP(startRoom, depth);
 
@@ -282,6 +288,8 @@ end;
 //Menubar stuff
 
 procedure TForm1.NewFileClick(Sender: TObject);
+var
+  roomAt: TRoom;
 begin
   if not HandleSave then Exit;
 
@@ -303,6 +311,11 @@ begin
   doorVariance := 0.5;
   DoorVarTextBox.Text := FloatToStr(0.5);
 
+  for roomAt in rooms do
+  begin
+    roomAt.doors.Clear;
+    roomAt.doors.Free;
+  end;
   rooms.Clear;
 
   currID := 'A';
