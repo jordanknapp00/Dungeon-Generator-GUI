@@ -7,7 +7,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ToolWin, Vcl.ActnMan, Vcl.ActnCtrls,
   Vcl.Menus, Vcl.StdCtrls,
   DataStructs,
-  System.Generics.Collections, System.DateUtils, System.UITypes;
+  System.Generics.Collections, System.DateUtils, System.UITypes, Vcl.ComCtrls;
 
 type
   TMap = Array of Array of Char;
@@ -38,6 +38,7 @@ type
     GenerateButton: TButton;
     SaveFileAs: TMenuItem;
     procedure FormCreate(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure NewSeedButtonClick(Sender: TObject);
     procedure SeedTextBoxChange(Sender: TObject);
     procedure WidthTextBoxChange(Sender: TObject);
@@ -62,6 +63,8 @@ type
     procedure ConnectDoors(map: TMap; doorAt: TDoor);
 
     function ArrayToString(const arr: Array of Char): String;
+
+    function HandleSave(): Boolean;
   public
     { Public declarations }
   end;
@@ -123,6 +126,11 @@ begin
   TextBox.Text := '';
   TextBox.ReadOnly := true;
   TextBox.ScrollBars := ssBoth;
+end;
+
+procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+  CanClose := HandleSave;
 end;
 
 //------------------------------------------------------------------------------
@@ -251,18 +259,8 @@ end;
 //Menubar stuff
 
 procedure TForm1.NewFileClick(Sender: TObject);
-var
-  optionSelected: Integer;
 begin
-  //ask to save current work
-  if generated then
-  begin
-    optionSelected := messageDlg('Would you like to save the current dungeon?',
-                                  mtConfirmation, mbYesNoCancel, 0);
-
-    if optionSelected = mrYes then SaveFileClick(nil)
-    else if optionSelected = mrCancel then Exit;
-  end;
+  if not HandleSave then Exit;
 
   //just reset everything to the default
   minSize := 4;
@@ -345,30 +343,71 @@ begin
     fileName := dialog.Files[0];
     saveText.SaveToFile(fileName);
   end;
-
-  dialog.Free;
 end;
 
 procedure TForm1.ExitProgramClick(Sender: TObject);
-var
-  optionSelected: Integer;
 begin
-  //ask to save current work
-  if generated then
-  begin
-    optionSelected := messageDlg('Would you like to save the current dungeon?',
-                                  mtConfirmation, mbYesNoCancel, 0);
-
-    if optionSelected = mrYes then SaveFileClick(nil)
-    else if optionSelected = mrCancel then Exit;
-  end;
-
   Application.MainForm.Close;
 end;
 
 //------------------------------------------------------------------------------
 //OTHER FUNCTIONS
 //------------------------------------------------------------------------------
+
+//function that takes care of saving whenever the program tries to exit. return
+//true if the program can exit, return false if not.
+function TForm1.HandleSave(): Boolean;
+var
+  optionSelected: Integer;
+  dialog: TSaveDialog;
+begin
+  Result := false;
+
+  if generated then
+  begin
+    optionSelected := messageDlg('Would you like to save the current dungeon?',
+                                  mtConfirmation, mbYesNoCancel, 0);
+
+    if optionSelected = mrYes then
+    //if yes is hit, we need to handle the save dialog
+    begin
+      //if there is no current file, we need to create one with a save dialog
+      if fileName = '' then
+      begin
+        //initialize the save dialog
+        dialog := TSaveDialog.Create(self);
+        dialog.InitialDir := GetCurrentDir;
+        dialog.Filter := 'Text Documents (*.txt)|*.txt';
+        dialog.DefaultExt := 'txt';
+        dialog.FilterIndex := 1;
+
+        if dialog.Execute then
+        begin
+          //if a file was picked, set it to be saved
+          if dialog.Files.Count > 0 then
+          begin
+            fileName := dialog.Files[0];
+            saveText.SaveToFile(fileName);
+            Result := true;
+          end
+          else Result := false;
+        end;
+      end
+      //otherwise, simple save the current file
+      else
+      begin
+        saveText.SaveToFile(fileName);
+        Result := true;
+      end;
+    end
+    //if no is hit, the program SHOULD exit
+    else if optionSelected = mrNo then Result := true
+    //if anything else is hit, the program SHOULD NOT exit. hopefully this will
+    //account for the user hitting the red X on the dialog.
+    else Result := false;
+  end
+  else Result := true;
+end;
 
 //function to get the current system time as a seed for the random number
 //generator
