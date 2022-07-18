@@ -126,11 +126,31 @@ begin
   TextBox.Text := '';
   TextBox.ReadOnly := true;
   TextBox.ScrollBars := ssBoth;
+
+  ReportMemoryLeaksOnShutdown := true;
 end;
 
 procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+var
+  roomAt: TRoom;
+  doorAt: TDoor;
 begin
   CanClose := HandleSave;
+
+  //free up allocated memory
+  if CanClose then
+  begin
+    for roomAt in rooms do
+    begin
+      for doorAt in roomAt.doors do doorAt.Free;
+
+      roomAt.doors.Free;
+      roomAt.Free;
+    end;
+    rooms.Free;
+
+    saveText.Free;
+  end;
 end;
 
 //------------------------------------------------------------------------------
@@ -254,6 +274,9 @@ begin
   for index := 0 to output.Count - 1 do saveText.Add(output[index]);
 
   generated := true;
+
+  startRoom.Free;
+  output.Free;
 end;
 
 //Menubar stuff
@@ -280,7 +303,7 @@ begin
   doorVariance := 0.5;
   DoorVarTextBox.Text := FloatToStr(0.5);
 
-  rooms := TList<TRoom>.Create;
+  rooms.Clear;
 
   currID := 'A';
 
@@ -288,7 +311,7 @@ begin
 
   generated := false;
 
-  saveText := TStringList.Create;
+  saveText.Clear;
   fileName := '';
 
   //set up the text box
@@ -343,6 +366,8 @@ begin
     fileName := dialog.Files[0];
     saveText.SaveToFile(fileName);
   end;
+
+  dialog.Free;
 end;
 
 procedure TForm1.ExitProgramClick(Sender: TObject);
@@ -392,6 +417,8 @@ begin
           end
           else Result := false;
         end;
+
+        dialog.Free;
       end
       //otherwise, simple save the current file
       else
@@ -690,7 +717,7 @@ begin
 
   TextBox.Lines := output;
 
-  Result := output
+  Result := output;
 end;
 
 //create connections between each door
