@@ -13,6 +13,7 @@ object Form1: TForm1
   Menu = MainMenu
   OldCreateOrder = False
   Position = poDesigned
+  OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
