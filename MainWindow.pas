@@ -87,6 +87,8 @@ var
   sizeVariance: Extended;
   doorVariance: Extended;
 
+  //TODO: Make it so only one TObjectList is used throughout the whole program,
+  //prevent need for freeing until the program is closed, basically
   rooms: TObjectList<TRoom>;
 
   currID: Char;
@@ -131,9 +133,16 @@ begin
   TextBox.ReadOnly := true;
   TextBox.ScrollBars := ssBoth;
 
-{$IFDEF DEBUG}
-  ReportMemoryLeaksOnShutdown := true;
-{$ENDIF}
+  {$IFDEF DEBUG}
+    ReportMemoryLeaksOnShutdown := true;
+    {$DEFINE FullDebugMode}
+    {$DEFINE LogMemoryLeakDetailToFile}
+    {$DEFINE RawStackTraces}
+    {$DEFINE CheckHeapForCorruption}
+    {$DEFINE EnableMemoryLeakReporting}
+    {$DEFINE ClearLogFileOnStartup}
+    {$DEFINE UseOutputDebugString}
+  {$ENDIF}
 end;
 
 procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: Boolean);

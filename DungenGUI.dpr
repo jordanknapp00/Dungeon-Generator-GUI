@@ -1,6 +1,9 @@
 program DungenGUI;
 
 uses
+  {$IFDEF DEBUG}
+  FastMM4,
+  {$ENDIF}
   Vcl.Forms,
   MainWindow in 'MainWindow.pas' {Form1},
   DataStructs in 'DataStructs.pas';
