@@ -67,3 +67,6 @@ __recovery/
 
 # Boss dependency manager vendor folder https://github.com/HashLoad/boss
 modules/
+
+# Don't keep anything in the build folders (memory leak .txt files will show up there)
+Win32/
