@@ -53,6 +53,7 @@ type
     procedure NewFileClick(Sender: TObject);
     procedure SaveFileClick(Sender: TObject);
     procedure SaveFileAsClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     function GenerateSeed: Int64;
 
@@ -152,6 +153,12 @@ begin
 
     saveText.Free;
   end;
+end;
+
+procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  Action := caFree;
+  Form1 := nil;
 end;
 
 //------------------------------------------------------------------------------

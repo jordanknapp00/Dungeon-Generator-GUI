@@ -13,6 +13,7 @@ object Form1: TForm1
   Menu = MainMenu
   OldCreateOrder = False
   Position = poDesigned
+  OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   PixelsPerInch = 96
