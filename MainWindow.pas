@@ -3,7 +3,8 @@ unit MainWindow;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ToolWin, Vcl.ActnMan, Vcl.ActnCtrls,
   Vcl.Menus, Vcl.StdCtrls,
   DataStructs,
@@ -11,6 +12,7 @@ uses
 
 type
   TMap = Array of Array of Char;
+
   TForm1 = class(TForm)
     MainMenu: TMainMenu;
     FileMenu: TMenuItem;
@@ -53,6 +55,7 @@ type
     procedure NewFileClick(Sender: TObject);
     procedure SaveFileClick(Sender: TObject);
     procedure SaveFileAsClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     function GenerateSeed: Int64;
 
@@ -99,7 +102,7 @@ implementation
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  //set all variables to the correct value
+  // set all variables to the correct value
   minSize := 4;
   depth := 4;
 
@@ -122,15 +125,15 @@ begin
   saveText := TStringList.Create;
   fileName := '';
 
-  //set up the text box
+  // set up the text box
   TextBox.Font.Name := 'Courier New';
   TextBox.Text := '';
   TextBox.ReadOnly := true;
   TextBox.ScrollBars := ssBoth;
 
-  {$IFDEF DEBUG}
-    ReportMemoryLeaksOnShutdown := true;
-  {$ENDIF}
+{$IFDEF DEBUG}
+  ReportMemoryLeaksOnShutdown := true;
+{$ENDIF}
 end;
 
 procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -139,7 +142,7 @@ var
 begin
   CanClose := HandleSave;
 
-  //free up allocated memory
+  // free up allocated memory
   if CanClose then
   begin
     for roomAt in rooms do
@@ -154,9 +157,15 @@ begin
   end;
 end;
 
-//------------------------------------------------------------------------------
-//GUI Handling
-//------------------------------------------------------------------------------
+procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  Action := caFree;
+  Form1 := nil;
+end;
+
+// -----------------------------------------------------------------------------
+// GUI Handling
+// -----------------------------------------------------------------------------
 
 procedure TForm1.NewSeedButtonClick(Sender: TObject);
 begin
@@ -170,17 +179,20 @@ end;
 
 procedure TForm1.SizeVarTextBoxChange(Sender: TObject);
 begin
-  if SizeVarTextBox.Text <> '' then sizeVariance := StrToFloat(SizeVarTextBox.Text);
+  if SizeVarTextBox.Text <> '' then
+    sizeVariance := StrToFloat(SizeVarTextBox.Text);
 end;
 
 procedure TForm1.SplitVarTextBoxChange(Sender: TObject);
 begin
-  if SplitVarTextBox.Text <> '' then splitVariance := StrToFloat(SplitVarTextBox.Text);
+  if SplitVarTextBox.Text <> '' then
+    splitVariance := StrToFloat(SplitVarTextBox.Text);
 end;
 
 procedure TForm1.DoorVarTextBoxChange(Sender: TObject);
 begin
-  if DoorVarTextBox.Text <> '' then doorVariance := StrToFloat(DoorVarTextBox.Text);
+  if DoorVarTextBox.Text <> '' then
+    doorVariance := StrToFloat(DoorVarTextBox.Text);
 end;
 
 procedure TForm1.WidthTextBoxChange(Sender: TObject);
@@ -211,7 +223,7 @@ var
   output: TStringList;
   index: Integer;
 begin
-  //check all the values to make sure they conform to the proper ranges
+  // check all the values to make sure they conform to the proper ranges
   if (splitVariance < 0) or (splitVariance > 1) then
   begin
     splitVariance := 0.5;
@@ -230,20 +242,21 @@ begin
     DoorVarTextBox.Text := FloatToStr(doorVariance);
   end;
 
-  //if splitVariance is higher than about .8, it can cause problems
+  // if splitVariance is higher than about .8, it can cause problems
   if splitVariance > 0.8 then
   begin
     splitVariance := 0.8;
     SplitVarTextBox.Text := FloatToStr(splitVariance);
   end;
 
-  if seed < 0 then seed := GenerateSeed;
+  if seed < 0 then
+    seed := GenerateSeed;
 
   System.RandSeed := seed;
 
   currID := 'A';
 
-  //free up the current list of rooms
+  // free up the current list of rooms
   for roomAt in rooms do
   begin
     roomAt.doors.Clear;
@@ -258,10 +271,11 @@ begin
 
   output := Print;
 
-  //set up the save file
+  // set up the save file
   saveText.Clear;
   saveText.Add('Parameters (copy these parameters to save your dungeon)');
-  saveText.Add('Size: ' + IntToStr(dungeonWidth) + 'x' + IntToStr(dungeonHeight));
+  saveText.Add('Size: ' + IntToStr(dungeonWidth) + 'x' +
+    IntToStr(dungeonHeight));
   saveText.Add('Depth: ' + IntToStr(depth));
   saveText.Add('Seed: ' + IntToStr(seed));
   saveText.Add('Minsize: ' + IntToStr(minSize));
@@ -269,18 +283,20 @@ begin
   saveText.Add('Size variance: ' + FloatToStr(sizeVariance));
   saveText.Add('Door variance: ' + FloatToStr(doorVariance));
   saveText.Add('');
-  saveText.Add('For the command line version of the program, copy the parameters directly:');
-  saveText.Add('-size ' + IntToStr(dungeonWidth) + ' ' + IntToStr(dungeonHeight) +
-                ' -depth ' + IntToStr(depth) + ' -minsize ' + IntToStr(minSize) +
-                ' -splitvar ' + FloatToStr(splitVariance) + ' -sizevar ' +
-                FloatToStr(sizeVariance) + ' -doorvar ' + FloatToStr(doorVariance) +
-                ' -seed ' + IntToStr(seed));
+  saveText.Add
+    ('For the command line version of the program, copy the parameters directly:');
+  saveText.Add('-size ' + IntToStr(dungeonWidth) + ' ' + IntToStr(dungeonHeight)
+    + ' -depth ' + IntToStr(depth) + ' -minsize ' + IntToStr(minSize) +
+    ' -splitvar ' + FloatToStr(splitVariance) + ' -sizevar ' +
+    FloatToStr(sizeVariance) + ' -doorvar ' + FloatToStr(doorVariance) +
+    ' -seed ' + IntToStr(seed));
   saveText.Add('');
   saveText.Add('Here''s your dungeon:');
   saveText.Add('');
 
-  //now add the output to saveText
-  for index := 0 to output.Count - 1 do saveText.Add(output[index]);
+  // now add the output to saveText
+  for index := 0 to output.Count - 1 do
+    saveText.Add(output[index]);
 
   generated := true;
 
@@ -288,15 +304,16 @@ begin
   output.Free;
 end;
 
-//Menubar stuff
+// Menubar stuff
 
 procedure TForm1.NewFileClick(Sender: TObject);
 var
   roomAt: TRoom;
 begin
-  if not HandleSave then Exit;
+  if not HandleSave then
+    Exit;
 
-  //just reset everything to the default
+  // just reset everything to the default
   minSize := 4;
   MinRoomSizeTextBox.Text := IntToStr(4);
   depth := 4;
@@ -305,7 +322,7 @@ begin
   dungeonWidth := 80;
   WidthTextBox.Text := IntToStr(80);
   dungeonHeight := 80;
-  HeightTextBOx.Text := IntToStr(80);
+  HeightTextBox.Text := IntToStr(80);
 
   splitVariance := 0.5;
   SplitVarTextBox.Text := FloatToStr(0.5);
@@ -330,7 +347,7 @@ begin
   saveText.Clear;
   fileName := '';
 
-  //set up the text box
+  // set up the text box
   TextBox.Font.Name := 'Courier New';
   TextBox.Text := '';
   TextBox.ReadOnly := true;
@@ -339,23 +356,23 @@ end;
 
 procedure TForm1.SaveFileClick(Sender: TObject);
 begin
-  //if no dungeon has been generated, show warning dialog and exit
+  // if no dungeon has been generated, show warning dialog and exit
   if not generated then
   begin
     messageDlg('You must generate a dungeon in order to save it.', mtWarning,
-                mbOKCancel, 0);
+      mbOKCancel, 0);
     Exit;
   end;
 
-  //if we haven't already loaded a file, then follow the procedure for creating
-  //and saving to a new file
+  // if we haven't already loaded a file, then follow the procedure for creating
+  // and saving to a new file
   if fileName = '' then
   begin
     SaveFileAsClick(nil);
     Exit;
   end;
 
-  //otherwise, simply overwrite the existing file
+  // otherwise, simply overwrite the existing file
   saveText.SaveToFile(fileName);
 end;
 
@@ -366,11 +383,11 @@ begin
   if not generated then
   begin
     messageDlg('You must generate a dungeon in order to save it.', mtWarning,
-                mbOKCancel, 0);
+      mbOKCancel, 0);
     Exit;
   end;
 
-  //initialize the save dialog, which should create a new file, i think
+  // initialize the save dialog, which should create a new file, i think
   dialog := TSaveDialog.Create(self);
   dialog.InitialDir := GetCurrentDir;
   dialog.Filter := 'Text Documents (*.txt)|*.txt';
@@ -391,12 +408,12 @@ begin
   Application.MainForm.Close;
 end;
 
-//------------------------------------------------------------------------------
-//OTHER FUNCTIONS
-//------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// OTHER FUNCTIONS
+// -----------------------------------------------------------------------------
 
-//function that takes care of saving whenever the program tries to exit. return
-//true if the program can exit, return false if not.
+// function that takes care of saving whenever the program tries to exit. return
+// true if the program can exit, return false if not.
 function TForm1.HandleSave(): Boolean;
 var
   optionSelected: Integer;
@@ -407,15 +424,15 @@ begin
   if generated then
   begin
     optionSelected := messageDlg('Would you like to save the current dungeon?',
-                                  mtConfirmation, mbYesNoCancel, 0);
+      mtConfirmation, mbYesNoCancel, 0);
 
     if optionSelected = mrYes then
-    //if yes is hit, we need to handle the save dialog
+    // if yes is hit, we need to handle the save dialog
     begin
-      //if there is no current file, we need to create one with a save dialog
+      // if there is no current file, we need to create one with a save dialog
       if fileName = '' then
       begin
-        //initialize the save dialog
+        // initialize the save dialog
         dialog := TSaveDialog.Create(self);
         dialog.InitialDir := GetCurrentDir;
         dialog.Filter := 'Text Documents (*.txt)|*.txt';
@@ -424,36 +441,40 @@ begin
 
         if dialog.Execute then
         begin
-          //if a file was picked, set it to be saved
+          // if a file was picked, set it to be saved
           if dialog.Files.Count > 0 then
           begin
             fileName := dialog.Files[0];
             saveText.SaveToFile(fileName);
             Result := true;
           end
-          else Result := false;
+          else
+            Result := false;
         end;
 
         dialog.Free;
       end
-      //otherwise, simple save the current file
+      // otherwise, simple save the current file
       else
       begin
         saveText.SaveToFile(fileName);
         Result := true;
       end;
     end
-    //if no is hit, the program SHOULD exit
-    else if optionSelected = mrNo then Result := true
-    //if anything else is hit, the program SHOULD NOT exit. hopefully this will
-    //account for the user hitting the red X on the dialog.
-    else Result := false;
+    // if no is hit, the program SHOULD exit
+    else if optionSelected = mrNo then
+      Result := true
+      // if anything else is hit, the program SHOULD NOT exit. hopefully this
+      // will account for the user hitting the red X on the dialog.
+    else
+      Result := false;
   end
-  else Result := true;
+  else
+    Result := true;
 end;
 
-//function to get the current system time as a seed for the random number
-//generator
+// function to get the current system time as a seed for the random number
+// generator
 function TForm1.GenerateSeed: Int64;
 var
   st: SystemTime;
@@ -462,14 +483,15 @@ begin
   Winapi.Windows.GetSystemTime(st);
 
   dt := System.SysUtils.EncodeDate(st.wYear, st.WMonth, st.WDay) +
-        System.SysUtils.EncodeTime(st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+    System.SysUtils.EncodeTime(st.wHour, st.wMinute, st.wSecond,
+    st.wMilliseconds);
 
   Result := System.DateUtils.MillisecondsBetween(dt, UnixDateDelta);
 
   SeedTextBox.Text := IntToStr(Result);
 end;
 
-//procedure to recursively create rooms
+// procedure to recursively create rooms
 procedure TForm1.BSP(room: TRoom; levelsToGo: Integer);
 var
   splitPoint: Extended;
@@ -480,11 +502,11 @@ var
 
   leftDoor, rightDoor, topDoor, bottomDoor: TDoor;
 begin
-  //check base cases first
-  //stop if we reach the desired depth, or if the current room has reached the
-  //minimum size
+  // check base cases first
+  // stop if we reach the desired depth, or if the current room has reached the
+  // minimum size
   if (levelsToGo = 0) or (room.rightWall - room.leftWall < minSize) or
-      (room.topWall - room.bottomWall < minSize) then
+    (room.topWall - room.bottomWall < minSize) then
   begin
     room.id := currID;
     currID := Succ(currID);
@@ -494,41 +516,48 @@ begin
 
   Dec(levelsToGo);
 
-  //determine direction upon which we will split. whichever wall is longer is
-  //the one that is split
+  // determine direction upon which we will split. whichever wall is longer is
+  // the one that is split
   if (room.rightWall - room.leftWall > room.topWall - room.bottomWall) then
   begin
     splitPoint := Split(room.leftWall, room.rightWall, splitVariance);
 
-    //using splitPoint, make two new rooms split down the line along that point
-    leftRoom := TRoom.Create(room.leftWall, splitPoint, room.bottomWall, room.topWall);
-    rightRoom := TRoom.Create(splitPoint, room.rightWall, room.bottomWall, room.topWall);
+    // using splitPoint, make two new rooms split down the line along that point
+    leftRoom := TRoom.Create(room.leftWall, splitPoint, room.bottomWall,
+      room.topWall);
+    rightRoom := TRoom.Create(splitPoint, room.rightWall, room.bottomWall,
+      room.topWall);
 
-    //since this started as one big room, we need to make sure the doors end up
-    //in the appropriate room. any doors that were on the left side of the split
-    //should end up in the left room, and vice versa
+    // since this started as one big room, we need to make sure the doors end up
+    // in the appropriate room. any doors that were on the left side of the split
+    // should end up in the left room, and vice versa
     for doorAt in room.doors do
     begin
-      if doorAt.x < splitPoint then toGetDoor := leftRoom
-      else toGetDoor := rightRoom;
+      if doorAt.x < splitPoint then
+        toGetDoor := leftRoom
+      else
+        toGetDoor := rightRoom;
 
       toGetDoor.AddDoor(doorAt);
 
-      //since we're splitting vertically, and there is a specific allowed
-      //variance for door locations, we want to relocate the door so it is
-      //within that variance. for example, with 0 variance, doors are always in
-      //the center of a room. vertical doors, however, would no longer be in the
-      //center becase we've split along the vertical axis. so we need to use the
-      //split function to move the door within the appropriate bounds
+      // since we're splitting vertically, and there is a specific allowed
+      // variance for door locations, we want to relocate the door so it is
+      // within that variance. for example, with 0 variance, doors are always in
+      // the center of a room. vertical doors, however, would no longer be in the
+      // center becase we've split along the vertical axis. so we need to use the
+      // split function to move the door within the appropriate bounds
       if not doorAt.isHorizontal then
-        doorAt.x := Split(toGetDoor.leftWall, toGetDoor.rightWall, doorVariance);
+        doorAt.x := Split(toGetDoor.leftWall, toGetDoor.rightWall,
+          doorVariance);
     end;
 
-    //after any doors have been added and relocated, we need to add a new set of
-    //doors between the rooms we just created. we've split vertically, so the
-    //doors will be horizontal.
-    leftDoor := TDoor.Create(splitPoint, Split(room.bottomWall, room.topWall, doorVariance), true);
-    rightDoor := TDoor.Create(splitPoint, Split(room.bottomWall, room.topWall, doorVariance), true);
+    // after any doors have been added and relocated, we need to add a new set of
+    // doors between the rooms we just created. we've split vertically, so the
+    // doors will be horizontal.
+    leftDoor := TDoor.Create(splitPoint, Split(room.bottomWall, room.topWall,
+      doorVariance), true);
+    rightDoor := TDoor.Create(splitPoint, Split(room.bottomWall, room.topWall,
+      doorVariance), true);
 
     leftDoor.other := rightDoor;
     rightDoor.other := leftDoor;
@@ -536,31 +565,39 @@ begin
     leftRoom.doors.Add(leftDoor);
     rightRoom.doors.Add(rightDoor);
 
-    //now recursively split these subrooms
+    // now recursively split these subrooms
     BSP(leftRoom, levelsToGo);
     BSP(rightRoom, levelsToGo);
   end
   else
   begin
-    //split across the opposite dimension. the code here is largely the same as
-    //above, just doing things in the x direction rather than y.
+    // split across the opposite dimension. the code here is largely the same as
+    // above, just doing things in the x direction rather than y.
     splitPoint := Split(room.bottomWall, room.topWall, splitVariance);
 
-    bottomRoom := TRoom.Create(room.leftWall, room.rightWall, room.bottomWall, splitPoint);
-    topRoom := TRoom.Create(room.leftWall, room.rightWall, splitPoint, room.topWall);
+    bottomRoom := TRoom.Create(room.leftWall, room.rightWall, room.bottomWall,
+      splitPoint);
+    topRoom := TRoom.Create(room.leftWall, room.rightWall, splitPoint,
+      room.topWall);
 
     for doorAt in room.doors do
     begin
-      if doorAt.y < splitPoint then toGetDoor := bottomRoom
-      else toGetDoor := topRoom;
+      if doorAt.y < splitPoint then
+        toGetDoor := bottomRoom
+      else
+        toGetDoor := topRoom;
 
       toGetDoor.AddDoor(doorAt);
 
-      if doorAt.isHorizontal then doorAt.y := Split(toGetDoor.bottomWall, toGetDoor.topWall, doorVariance);
+      if doorAt.isHorizontal then
+        doorAt.y := Split(toGetDoor.bottomWall, toGetDoor.topWall,
+          doorVariance);
     end;
 
-    bottomDoor := TDoor.Create(Split(room.leftWall, room.rightWall, doorVariance), splitPoint, false);
-    topDoor := TDoor.Create(Split(room.leftWall, room.rightWall, doorvariance), splitPoint, false);
+    bottomDoor := TDoor.Create(Split(room.leftWall, room.rightWall,
+      doorVariance), splitPoint, false);
+    topDoor := TDoor.Create(Split(room.leftWall, room.rightWall, doorVariance),
+      splitPoint, false);
 
     bottomDoor.other := topDoor;
     topDoor.other := bottomDoor;
@@ -578,9 +615,9 @@ function TForm1.Split(min, max, variance: Extended): Extended;
 var
   randomVariance, midPoint: Extended;
 begin
-  //get our random variance value, the amount from which we're deviating from
-  //the center. with no variance, we will always split right down the middle of
-  //a room. this variance value will always be between -1 and 1, inclusive.
+  // get our random variance value, the amount from which we're deviating from
+  // the center. with no variance, we will always split right down the middle of
+  // a room. this variance value will always be between -1 and 1, inclusive.
   randomVariance := Random * 2 - 1;
 
   midPoint := (min + max) / 2;
@@ -590,43 +627,47 @@ begin
   Result := midPoint;
 end;
 
-//shrink down each room some amount based on sizeVariance
+// shrink down each room some amount based on sizeVariance
 procedure TForm1.Shrink;
 var
   roomAt: TRoom;
   doorAt: TDoor;
 
   horizScale, vertScale, currWidth, newWidth, currHeight, newHeight,
-  centerWidth, centerHeight, doorOffsetX, doorOffsetY: Extended;
+    centerWidth, centerHeight, doorOffsetX, doorOffsetY: Extended;
 begin
   for roomAt in rooms do
   begin
-    //shrink horizontally first
+    // shrink horizontally first
     horizScale := (1 - sizeVariance * Random);
     currWidth := roomAt.rightWall - roomAt.leftWall;
     newWidth := currWidth * horizScale;
 
-    //at minimum, each room must be 2 units smaller to create some space in
-    //between each room
-    if currWidth - newWidth < 2 then newWidth := currWidth - 2;
+    // at minimum, each room must be 2 units smaller to create some space in
+    // between each room
+    if currWidth - newWidth < 2 then
+      newWidth := currWidth - 2;
 
-    //but rooms also must conform to the minimum size
-    if newWidth < minSize then newWidth := minSize;
+    // but rooms also must conform to the minimum size
+    if newWidth < minSize then
+      newWidth := minSize;
 
     centerWidth := (roomAt.rightWall + roomAt.leftWall) / 2;
 
-    //adjust vertical walls according to new width
+    // adjust vertical walls according to new width
     roomAt.rightWall := centerWidth + newWidth / 2;
     roomAt.leftWall := centerWidth - newWidth / 2;
 
-    //now do the same process, but vertically
+    // now do the same process, but vertically
     vertScale := (1 - sizeVariance * Random);
     currHeight := roomAt.topWall - roomAt.bottomWall;
     newHeight := currHeight * vertScale;
 
-    if currHeight - newHeight < 2 then newHeight := currHeight - 2;
+    if currHeight - newHeight < 2 then
+      newHeight := currHeight - 2;
 
-    if newHeight < minSize then newHeight := minSize;
+    if newHeight < minSize then
+      newHeight := minSize;
 
     centerHeight := (roomAt.bottomWall + roomAt.topWall) / 2;
 
@@ -636,7 +677,7 @@ begin
     horizScale := newWidth / currWidth;
     vertScale := newHeight / currHeight;
 
-    //also need to adjust the doors so they're always inside a wall
+    // also need to adjust the doors so they're always inside a wall
     for doorAt in roomAt.doors do
     begin
       doorOffsetX := doorAt.x - centerWidth;
@@ -648,7 +689,7 @@ begin
   end;
 end;
 
-//actually print the map to the textbox
+// actually print the map to the textbox
 //
 // '.' = void space
 // ' ' = open space (in a room)
@@ -671,12 +712,13 @@ var
 
   output: TStringList;
 begin
-  //set size of 2d char array
+  // set size of 2d char array
   SetLength(map, dungeonHeight, dungeonWidth);
 
-  //begin by filling entire space with void. it will be drawn over later.
+  // begin by filling entire space with void. it will be drawn over later.
   for colAt := 0 to dungeonWidth - 1 do
-    for rowAt := 0 to dungeonHeight - 1 do map[rowAt, colAt] := '.';
+    for rowAt := 0 to dungeonHeight - 1 do
+      map[rowAt, colAt] := '.';
 
   for roomAt in rooms do
   begin
@@ -685,47 +727,50 @@ begin
     top := Trunc(roomAt.topWall);
     bottom := Trunc(roomAt.bottomWall);
 
-    //place vertical lines for sides of rooms, ignoring corners
+    // place vertical lines for sides of rooms, ignoring corners
     for colAt := left + 1 to right - 1 do
     begin
       map[colAt][bottom] := '|';
       map[colAt][top] := '|';
     end;
 
-    //place horizontal lines for top and bottom of rooms, ignoring corners
+    // place horizontal lines for top and bottom of rooms, ignoring corners
     for rowAt := bottom + 1 to top - 1 do
     begin
       map[left][rowAt] := '-';
       map[right][rowAt] := '-';
     end;
 
-    //fill rooms with empty space
+    // fill rooms with empty space
     for colAt := left + 1 to right - 1 do
-      for rowAt := bottom + 1 to top - 1 do map[colAt, rowAt] := ' ';
+      for rowAt := bottom + 1 to top - 1 do
+        map[colAt, rowAt] := ' ';
 
-    //apply corner tiles for each room
+    // apply corner tiles for each room
     map[left, bottom] := '+';
     map[right, bottom] := '+';
     map[left, top] := '+';
     map[right, top] := '+';
 
-    //apply room id
+    // apply room id
     map[Trunc((left + right) / 2)][Trunc((bottom + top) / 2)] := roomAt.id;
 
-    //handle doors
+    // handle doors
     for doorAt in roomAt.doors do
     begin
       colAt := Trunc(doorAt.x);
       rowAt := Trunc(doorAt.y);
 
-      if doorAt.isHorizontal then map[colAt, rowAt] := 'H'
-      else map[colAt][rowAt] := 'I';
+      if doorAt.isHorizontal then
+        map[colAt, rowAt] := 'H'
+      else
+        map[colAt][rowAt] := 'I';
 
       ConnectDoors(map, doorAt);
     end;
   end;
 
-  //now need to actually print it
+  // now need to actually print it
   output := TStringList.Create;
   for colAt := 0 to dungeonHeight - 1 do
   begin
@@ -737,7 +782,7 @@ begin
   Result := output;
 end;
 
-//create connections between each door
+// create connections between each door
 procedure TForm1.ConnectDoors(map: TMap; doorAt: TDoor);
 var
   midPoint, fromCol, toCol, fromRow, toRow, temp, colAt, rowAt: Integer;
@@ -763,9 +808,11 @@ begin
       toRow := temp;
     end;
 
-    for colAt := fromCol + 1 to midPoint do map[colAt, fromRow] := 'O';
+    for colAt := fromCol + 1 to midPoint do
+      map[colAt, fromRow] := 'O';
 
-    for colAt := midPoint to toCol - 1 do map[colAt, toRow] := 'O';
+    for colAt := midPoint to toCol - 1 do
+      map[colAt, toRow] := 'O';
 
     if fromRow > toRow then
     begin
@@ -774,7 +821,8 @@ begin
       toRow := temp;
     end;
 
-    for rowAt := fromRow + 1 to toRow - 1 do map[midPoint, rowAt] := 'O';
+    for rowAt := fromRow + 1 to toRow - 1 do
+      map[midPoint, rowAt] := 'O';
   end
   else
   begin
@@ -797,9 +845,11 @@ begin
       toCol := temp;
     end;
 
-    for rowAt := fromRow + 1 to midPoint do map[fromCol][rowAt] := 'O';
+    for rowAt := fromRow + 1 to midPoint do
+      map[fromCol][rowAt] := 'O';
 
-    for rowAt := midPoint to toRow - 1 do map[toCol][rowAt] := 'O';
+    for rowAt := midPoint to toRow - 1 do
+      map[toCol][rowAt] := 'O';
 
     if fromCol > toCol then
     begin
@@ -808,15 +858,18 @@ begin
       toCol := temp;
     end;
 
-    for colAt := fromCol + 1 to toCol - 1 do map[colAt][midPoint] := 'O';
+    for colAt := fromCol + 1 to toCol - 1 do
+      map[colAt][midPoint] := 'O';
   end;
 end;
 
-//helper function to get a string from an array of chars
+// helper function to get a string from an array of chars
 function TForm1.ArrayToString(const arr: array of Char): string;
 begin
-  if Length(arr) > 0 then SetString(Result, PChar(@arr[0]), Length(arr))
-  else Result := '';
+  if Length(arr) > 0 then
+    SetString(Result, PChar(@arr[0]), Length(arr))
+  else
+    Result := '';
 end;
 
 end.
