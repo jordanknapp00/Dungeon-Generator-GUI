@@ -6,41 +6,41 @@ uses System.Generics.Collections;
 
 type
   TDoor = class
-    public
-      x: Double;
-      y: Double;
-      divDim: Double;
+  public
+    x: Double;
+    y: Double;
+    divDim: Double;
 
-      isHorizontal: Boolean;
+    isHorizontal: Boolean;
 
-      other: TDoor;
+    other: TDoor;
 
-    published
-      constructor Create(xPos, yPos: Double; horiz: Boolean);
+  published
+    constructor Create(xPos, yPos: Double; horiz: Boolean);
   end;
 
   TRoom = class
-    public
-      leftWall: Double;
-      rightWall: Double;
-      topWall: Double;
-      bottomWall: Double;
+  public
+    leftWall: Double;
+    rightWall: Double;
+    topWall: Double;
+    bottomWall: Double;
 
-      id: Char;
+    id: Char;
 
-      doors: TObjectList<TDoor>;
+    doors: TObjectList<TDoor>;
 
-    published
-      constructor Create(left, right, bottom, top: Double);
+  published
+    constructor Create(left, right, bottom, top: Double);
 
-      procedure AddDoor(toAdd: TDoor);
+    procedure AddDoor(toAdd: TDoor);
   end;
 
 implementation
 
-//------------------------------------------------------------------------------
-//TDOOR METHODS
-//------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// TDOOR METHODS
+// -----------------------------------------------------------------------------
 
 constructor TDoor.Create(xPos, yPos: Double; horiz: Boolean);
 begin
@@ -48,13 +48,15 @@ begin
   y := yPos;
   isHorizontal := horiz;
 
-  if isHorizontal then divDim := x
-  else divDim := y;
+  if isHorizontal then
+    divDim := x
+  else
+    divDim := y;
 end;
 
-//------------------------------------------------------------------------------
-//TROOM METHODS
-//------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// TROOM METHODS
+// -----------------------------------------------------------------------------
 
 constructor TRoom.Create(left, right, bottom, top: Double);
 begin
