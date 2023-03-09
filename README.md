@@ -9,7 +9,3 @@ Like the non-graphical version of the program, this is meant to be a simple, no-
 ## Dungeon Parameters
 
 See the [README for the command-line version](https://github.com/jordanknapp00/Dungeon-Generator/blob/main/README.md) for more information on details such as the different dungeon parameters.
-
-# License
-
-This project uses the [FPA General Code License](https://about.fairfieldprogramming.org/licenses/code/). In short, you can do whatever you want with this code for non-commerical purposes. In order to use this code for commerical purposes, you must make substantial changes to it. Reorganizing the logic does not count as a substantial change. See [LICENSE.md](LICENSE.md) or the link above for more details.
